@@ -1,0 +1,31 @@
+.agents/skills/superdesign/INIT.md
+.agents/skills/superdesign/SUPERDESIGN.md
+
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Env files
+.env
+.env.*
+
+# Runtime cache
+cache.json
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# IDEs
+.idea/
+
+# Logs
+logs/
+*.log
+
+# Optional
+dist/
+build/
