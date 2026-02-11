@@ -170,6 +170,11 @@ app.get("/api/score/:zipcode", async (req, res) => {
   }
 });
 
+// Simple health endpoint for quick smoke tests
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
