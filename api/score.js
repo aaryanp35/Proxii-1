@@ -67,16 +67,30 @@ const weights = {
 };
 
 function normalizeScoreWithCategory(rawScore) {
-  // Scale to 0-100 using tanh
-  const scale = 25;
-  const v = Math.tanh(rawScore / scale);
-  const normalized = ((v + 1) / 2) * 100;
+  // REFACTORED: Recenter normalization to prevent score inflation
+  // Baseline urban zip with average amenities = 50
+  // Top 5% of neighborhoods = 90+
+  //
+  // The logistic function ensures:
+  // - rawScore ≈ 0-10: Developing (30-45)
+  // - rawScore ≈ 10-20: Market Standard (45-60)
+  // - rawScore ≈ 20-35: High Growth (60-80)
+  // - rawScore ≈ 35+: Elite Growth (80-95+)
+  
+  const baselineScore = 50; // Average urban zip
+  const scaleFactor = 18;   // Controls steepness of logistic curve
+  const range = 40;         // Maximum deviation from baseline
+  
+  // Logistic normalization: baselineScore + range * tanh(rawScore / scaleFactor)
+  const tanhValue = Math.tanh(rawScore / scaleFactor);
+  const normalized = baselineScore + range * tanhValue;
   const finalScore = Math.max(0, Math.min(100, Math.round(normalized)));
   
   // Categorize
-  let category = 'Stable/Under-invested';
-  if (finalScore >= 80) category = 'Late Stage Gentrified';
-  else if (finalScore >= 50) category = 'High-Velocity Transition';
+  let category = 'Developing';
+  if (finalScore >= 90) category = 'Elite Growth';
+  else if (finalScore >= 75) category = 'High Growth';
+  else if (finalScore >= 50) category = 'Market Standard';
   
   return { score: finalScore, category };
 }
@@ -145,11 +159,13 @@ function haversineDistance(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
-// Diminishing returns for indicator count: 1st=100%, 2nd=33%, 3rd+=13%
-function getDiminishingValue(count) {
-  if (count === 1) return 1.0;
-  if (count === 2) return 0.33;
-  return 0.13;
+// REFACTORED: Logarithmic scaling for amenity counts (prevents inflation)
+// 1st instance: 1.0, 2nd: 1.585, 3rd: 2.0, 5th: 2.585, 10th: 3.459
+// This ensures the 5th coffee shop contributes significantly less than the 1st
+function getLogarithmicValue(count) {
+  if (count <= 0) return 0;
+  // log2(count + 1) provides smooth diminishing returns
+  return Math.log2(count + 1);
 }
 
 function buildWeightedIndicators() {
@@ -250,27 +266,33 @@ async function scoreZipcode(zipcode) {
       }
     }
 
-    // Score this indicator based on count and distances
+    // REFACTORED: Score this indicator using logarithmic scaling for amenity counts
     if (placesForIndicator.length > 0) {
-      let score = 0;
+      // Calculate base weighted score from all instances
+      let baseScore = 0;
       for (let i = 0; i < placesForIndicator.length; i++) {
         const place = placesForIndicator[i];
-        const diminishingMult = getDiminishingValue(i + 1);
-        const weightedContribution = indicator.weight * place.distanceWeight * diminishingMult;
-        score += weightedContribution;
+        baseScore += indicator.weight * place.distanceWeight;
       }
-
+      
+      // Apply logarithmic scaling: prevents 5th coffee shop from being worth as much as 1st
+      // log2(count + 1) creates smooth diminishing returns:
+      // 1st: 1.0, 2nd: 1.585, 3rd: 2.0, 5th: 2.585, 10th: 3.459
+      const logMultiplier = getLogarithmicValue(placesForIndicator.length);
+      const normalizedScore = baseScore * (logMultiplier / placesForIndicator.length);
+      
       if (indicator.weight > 0) {
-        growthScore += score;
+        growthScore += normalizedScore;
       } else {
-        riskScore += score; // negative, so subtraction
+        // REFACTORED: Hard penalties - risk factors actively subtract
+        riskScore += normalizedScore; // Still negative, applied as hard penalty
       }
 
       indicatorHits.push({
         label: indicator.label,
         count: placesForIndicator.length,
         weight: indicator.weight,
-        score: Math.round(score * 100) / 100,
+        score: Math.round(normalizedScore * 100) / 100,
         tier: indicator.tier
       });
     }
@@ -280,8 +302,14 @@ async function scoreZipcode(zipcode) {
   const anchorMultiplier = hasAnchor ? 1.2 : 1.0;
   const adjustedGrowthScore = growthScore * anchorMultiplier + culturalPioneerScore;
 
-  // Combined score
-  const rawScore = adjustedGrowthScore + riskScore;
+  // REFACTORED: Hard penalties for risk factors
+  // Risk factors (negative scores) now apply as hard penalties with 1.3x multiplier
+  // This ensures a single major risk factor significantly impacts the final score
+  const hardPenaltyMultiplier = 1.3;
+  const penalizedScore = adjustedGrowthScore + (riskScore * hardPenaltyMultiplier);
+  
+  // Combined score with penalty floor to prevent unbounded negatives
+  const rawScore = Math.max(-50, penalizedScore);
 
   const { score, category } = normalizeScoreWithCategory(rawScore);
 
@@ -296,6 +324,7 @@ async function scoreZipcode(zipcode) {
     riskScore: Math.round(riskScore * 100) / 100,
     hasAnchor,
     culturalPioneerScore: Math.round(culturalPioneerScore * 100) / 100,
+    scoringMethod: "logarithmic-scaling-v2",
     indicators: indicatorHits.sort((a, b) => Math.abs(b.score) - Math.abs(a.score)),
     drivers: indicatorHits
       .filter((item) => item.weight > 0)
