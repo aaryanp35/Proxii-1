@@ -12,16 +12,17 @@ function App() {
   const [status, setStatus] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const scoreValue = data?.score ?? 65;
-  const nationalStats = getNationalStats(scoreValue);
-  const gaugeLabel = scoreValue >= 70 ? 'High Growth' : scoreValue >= 40 ? 'Balanced Growth' : 'High Risk';
-  const gaugeClass = scoreValue >= 70 ? 'text-emerald-400' : scoreValue >= 40 ? 'text-amber-400' : 'text-rose-400';
-  const gaugeTextClass = scoreValue >= 70 ? 'text-emerald-500' : scoreValue >= 40 ? 'text-amber-500' : 'text-rose-500';
+  const scoreValue = data?.score;
+  const nationalStats = scoreValue ? getNationalStats(scoreValue) : null;
+  const gaugeLabel = !scoreValue ? null : scoreValue >= 70 ? 'High Growth' : scoreValue >= 40 ? 'Balanced Growth' : 'High Risk';
+  const gaugeClass = !scoreValue ? '' : scoreValue >= 70 ? 'text-emerald-400' : scoreValue >= 40 ? 'text-amber-400' : 'text-rose-400';
+  const gaugeTextClass = !scoreValue ? '' : scoreValue >= 70 ? 'text-emerald-500' : scoreValue >= 40 ? 'text-amber-500' : 'text-rose-500';
 
   const drivers = useMemo(() => data?.drivers ?? [], [data]);
   const risks = useMemo(() => data?.risks ?? [], [data]);
 
   useEffect(() => {
+    if (!scoreValue) return;
     const gauge = document.getElementById('main-gauge');
     const circumference = 264;
     const offset = circumference - (scoreValue / 100) * circumference;
@@ -64,7 +65,7 @@ function App() {
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
       {/* Navigation */}
-      <nav className="glass-nav sticky top-0 z-50 w-full py-3 px-6 md:py-4 md:px-12 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0">
+      <nav className="intro-nav glass-nav sticky top-0 z-50 w-full py-3 px-6 md:py-4 md:px-12 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0">
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="w-10 h-10 bg-[#2D8E6F] rounded-xl flex items-center justify-center shadow-lg shadow-[#2D8E6F]/25">
             <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -148,76 +149,104 @@ function App() {
       <main className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-12 py-12">
         
         {/* Hero Section */}
-        <section className="mb-20 flex flex-col items-center text-center reveal-node">
+        <section className="intro-hero mb-20 flex flex-col items-center text-center reveal-node">
           {status === 'loading' && (
             <div className="absolute top-32 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-20">
               <div className="w-12 h-12 border-4 border-[#2D8E6F]/20 border-t-[#2D8E6F] rounded-full animate-spin"></div>
               <p className="text-sm font-semibold text-slate-600">Loading results for {zipCode}...</p>
             </div>
           )}
-          <div className="relative w-80 h-80 md:w-[420px] md:h-[420px] flex items-center justify-center">
-            <div className="absolute inset-0 bg-[#E8B34F]/10 blur-[120px] rounded-full"></div>
-            
-            {/* Sparkles */}
-            <div className="sparkle absolute" style={{ top: '10%', left: '20%', fontSize: '24px', animationDelay: '0.2s' }}>✨</div>
-            <div className="sparkle absolute" style={{ top: '20%', right: '15%', fontSize: '18px', animationDelay: '0.8s' }}>✨</div>
-            <div className="sparkle absolute" style={{ bottom: '25%', left: '10%', fontSize: '20px', animationDelay: '1.2s' }}>✨</div>
+          
+          {/* Gauge Display (only shown when data is loaded) */}
+          {scoreValue ? (
+            <div className="gauge-container relative w-80 h-80 md:w-[420px] md:h-[420px] flex items-center justify-center">
+              <div className="absolute inset-0 bg-[#E8B34F]/10 blur-[120px] rounded-full"></div>
+              
+              {/* Sparkles */}
+              <div className="sparkle absolute" style={{ top: '10%', left: '20%', fontSize: '24px', animationDelay: '0.2s' }}>✨</div>
+              <div className="sparkle absolute" style={{ top: '20%', right: '15%', fontSize: '18px', animationDelay: '0.8s' }}>✨</div>
+              <div className="sparkle absolute" style={{ bottom: '25%', left: '10%', fontSize: '20px', animationDelay: '1.2s' }}>✨</div>
 
-            {/* Gauge */}
-            <svg className="w-full h-full transform -rotate-90 filter drop-shadow-sm">
-              <circle
-                cx="50%"
-                cy="50%"
-                r="42%"
-                className="stroke-current text-slate-100 fill-none"
-                strokeWidth="12"
-              />
-              <circle
-                id="main-gauge"
-                cx="50%"
-                cy="50%"
-                r="42%"
-                className={`gauge-ring stroke-current ${gaugeClass} fill-none ${status === 'loading' ? 'animate-pulse' : ''}`}
-                strokeWidth="12"
-                strokeLinecap="round"
-                style={{ strokeDasharray: 264, strokeDashoffset: 264 }}
-              />
-            </svg>
+              {/* Gauge */}
+              <svg className="w-full h-full transform -rotate-90 filter drop-shadow-sm">
+                <circle
+                  cx="50%"
+                  cy="50%"
+                  r="42%"
+                  className="stroke-current text-slate-100 fill-none"
+                  strokeWidth="12"
+                />
+                <circle
+                  id="main-gauge"
+                  cx="50%"
+                  cy="50%"
+                  r="42%"
+                  className={`gauge-ring stroke-current ${gaugeClass} fill-none ${status === 'loading' ? 'animate-pulse' : ''}`}
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                  style={{ strokeDasharray: 264, strokeDashoffset: 264 }}
+                />
+              </svg>
 
-            <div className="absolute flex flex-col items-center">
-              <NationalPercentileHover 
-                percentile={nationalStats.percentile} 
-                rankLabel={nationalStats.rankLabel}
-                topPercentage={nationalStats.topPercentage}
-              >
-                <span className="text-7xl md:text-9xl font-bold text-slate-900 tracking-tighter cursor-help">{scoreValue}</span>
-              </NationalPercentileHover>
-              <span className={`${gaugeTextClass} font-bold tracking-[0.2em] text-xs md:text-sm uppercase mt-1`}>{gaugeLabel}</span>
+              <div className="absolute flex flex-col items-center">
+                <NationalPercentileHover 
+                  percentile={nationalStats.percentile} 
+                  rankLabel={nationalStats.rankLabel}
+                  topPercentage={nationalStats.topPercentage}
+                >
+                  <span className="text-7xl md:text-9xl font-bold text-slate-900 tracking-tighter cursor-help">{scoreValue}</span>
+                </NationalPercentileHover>
+                <span className={`${gaugeTextClass} font-bold tracking-[0.2em] text-xs md:text-sm uppercase mt-1`}>{gaugeLabel}</span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="gauge-container relative w-80 h-80 md:w-[420px] md:h-[420px] flex items-center justify-center">
+              <div className="absolute inset-0 bg-[#E8B34F]/10 blur-[120px] rounded-full"></div>
+              
+              {/* Sparkles */}
+              <div className="sparkle absolute" style={{ top: '10%', left: '20%', fontSize: '24px', animationDelay: '0.2s' }}>✨</div>
+              <div className="sparkle absolute" style={{ top: '20%', right: '15%', fontSize: '18px', animationDelay: '0.8s' }}>✨</div>
+              <div className="sparkle absolute" style={{ bottom: '25%', left: '10%', fontSize: '20px', animationDelay: '1.2s' }}>✨</div>
+
+              <div className="absolute flex flex-col items-center">
+                <svg className="w-32 h-32 md:w-40 md:h-40 text-slate-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={0.5} d="M9 12l2 2 4-4m7 4a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-xl font-bold text-slate-400">Enter a zip code to begin</p>
+              </div>
+            </div>
+          )}
 
           <div className="mt-10 max-w-2xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">Market Index Analysis</h1>
-            {status === 'success' && areaName && (
-              <p className="text-2xl md:text-3xl font-bold text-[#2D8E6F] mb-4">{areaName}</p>
+            {scoreValue ? (
+              <>
+                <h1 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">Market Index Analysis</h1>
+                {status === 'success' && areaName && (
+                  <p className="text-2xl md:text-3xl font-bold text-[#2D8E6F] mb-4">{areaName}</p>
+                )}
+                <p className="text-slate-500 leading-relaxed text-lg">
+                  Zip <span className="text-slate-900 font-semibold">({data.zipcode})</span> shows a {gaugeLabel.toLowerCase()} profile. Current investment signal is <span className={`${gaugeTextClass} font-bold underline decoration-2 underline-offset-4`}>{gaugeLabel}</span>.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">Neighborhood Growth Analysis</h1>
+                <p className="text-slate-500 leading-relaxed text-lg">
+                  Discover growth potential and development opportunities. Search by ZIP code to get a comprehensive market index analysis for any neighborhood in the US.
+                </p>
+              </>
             )}
-            <p className="text-slate-500 leading-relaxed text-lg">
-              {status === 'success' && data?.zipcode ? (
-                <>Zip <span className="text-slate-900 font-semibold">({data.zipcode})</span> shows a {gaugeLabel.toLowerCase()} profile. Current investment signal is <span className={`${gaugeTextClass} font-bold underline decoration-2 underline-offset-4`}>{gaugeLabel}</span>.</>
-              ) : (
-                <>Enter a zip code to load a live score. The gauge will update once results are available.</>
-              )}
-            </p>
             {status === 'error' && errorMessage && (
               <p className="mt-3 text-sm text-rose-500 font-semibold">{errorMessage}</p>
             )}
           </div>
         </section>
 
-        {/* Bento Grid */}
+        {/* Bento Grid - Only show when data is loaded */}
+        {scoreValue && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Growth Drivers Card */}
-          <div className="soft-card card-gradient-emerald hover-lift rounded-[2.5rem] p-8 flex flex-col border border-white reveal-node relative" style={{ animationDelay: '0.1s' }}>
+          <div className="intro-card soft-card card-gradient-emerald hover-lift rounded-[2.5rem] p-8 flex flex-col border border-white reveal-node relative" style={{ animationDelay: '0.1s' }}>
             {status === 'loading' && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-[2.5rem] z-20"></div>}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
@@ -265,7 +294,7 @@ function App() {
           </div>
 
           {/* Risk Indicators Card */}
-          <div className="soft-card card-gradient-rose hover-lift rounded-[2.5rem] p-8 flex flex-col border border-white reveal-node relative" style={{ animationDelay: '0.2s' }}>
+          <div className="intro-card soft-card card-gradient-rose hover-lift rounded-[2.5rem] p-8 flex flex-col border border-white reveal-node relative" style={{ animationDelay: '0.2s' }}>
             {status === 'loading' && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-[2.5rem] z-20"></div>}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
@@ -312,9 +341,11 @@ function App() {
             </div>
           </div>
         </div>
+        )}
 
-        {/* Bottom Info Banner */}
-        <div className="mt-16 p-8 rounded-[2.5rem] bg-white border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm reveal-node" style={{ animationDelay: '0.4s' }}>
+        {/* Bottom Info Banner - Only show when data is loaded */}
+        {scoreValue && (
+        <div className="intro-footer mt-16 p-8 rounded-[2.5rem] bg-white border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm reveal-node" style={{ animationDelay: '0.4s' }}>
           <div className="flex items-center gap-5">
             <div className="relative">
               <div className="w-3.5 h-3.5 rounded-full bg-[#2D8E6F] animate-ping opacity-20"></div>
@@ -329,6 +360,7 @@ function App() {
             </svg>
           </button>
         </div>
+        )}
       </main>
 
       {/* Floating Action Button */}
@@ -340,7 +372,7 @@ function App() {
       </button>
 
       {/* Footer */}
-      <footer className="py-10 px-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 reveal-node" style={{ animationDelay: '0.5s' }}>
+      <footer className="intro-footer py-10 px-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 reveal-node" style={{ animationDelay: '0.5s' }}>
         <p className="text-xs font-bold text-slate-400 tracking-wider uppercase">&copy; 2024 Proxii Analytics — Built for Fintech</p>
         <div className="flex gap-10">
           <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Privacy Policy</a>

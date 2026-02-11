@@ -1,3 +1,70 @@
 @keyframes draw {
   to { stroke-dashoffset: 0; }
 }
+
+/* Intro animations */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.intro-nav {
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.intro-hero {
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.intro-card {
+  animation: scaleIn 0.6s ease-out;
+}
+
+.intro-card:nth-child(1) {
+  animation-delay: 0.3s;
+}
+
+.intro-card:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.intro-card:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+.intro-footer {
+  animation: fadeInUp 0.6s ease-out 0.6s both;
+}
+
+.gauge-container {
+  animation: scaleIn 0.7s ease-out;
+}
+
