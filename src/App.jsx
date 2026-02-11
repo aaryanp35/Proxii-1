@@ -218,7 +218,7 @@ function App() {
                 </div>
                 <div className="flex flex-col">
                   <h3 className="text-xl font-bold text-slate-900 leading-tight">Growth Drivers</h3>
-                  <span className="text-[10px] text-[#2D8E6F] font-black uppercase tracking-widest badge-pulse">+4 new trends</span>
+                  <span className="text-[10px] text-[#2D8E6F] font-black uppercase tracking-widest badge-pulse">+{drivers.length} trend{drivers.length !== 1 ? 's' : ''}</span>
                 </div>
               </div>
               <span className="px-3 py-1 bg-[#2D8E6F]/10 text-[#2D8E6F] text-[10px] font-black uppercase tracking-widest rounded-full">Ascending</span>
@@ -259,7 +259,7 @@ function App() {
                 </div>
                 <div className="flex flex-col">
                   <h3 className="text-xl font-bold text-slate-900 leading-tight">Risk Indicators</h3>
-                  <span className="text-[10px] text-[#D4465E] font-black uppercase tracking-widest badge-pulse">-2 signals</span>
+                  <span className="text-[10px] text-[#D4465E] font-black uppercase tracking-widest badge-pulse">-{risks.length} signal{risks.length !== 1 ? 's' : ''}</span>
                 </div>
               </div>
               <span className="px-3 py-1 bg-[#D4465E]/10 text-[#D4465E] text-[10px] font-black uppercase tracking-widest rounded-full">Alert</span>
