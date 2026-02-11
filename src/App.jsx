@@ -209,10 +209,11 @@ function App() {
               <div className="sparkle absolute" style={{ bottom: '25%', left: '10%', fontSize: '20px', animationDelay: '1.2s' }}>✨</div>
 
               <div className="absolute flex flex-col items-center">
-                <svg className="w-32 h-32 md:w-40 md:h-40 text-slate-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={0.5} d="M9 12l2 2 4-4m7 4a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg className="w-32 h-32 md:w-40 md:h-40 text-slate-300 mb-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="0.8" className="text-slate-200" fill="currentColor" fillOpacity="0.03" />
+                  <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <p className="text-xl font-bold text-slate-400">Enter a zip code to begin</p>
+                <p className="text-xl font-bold text-slate-400">Enter any ZIP/postal code in the US, Canada or Europe to begin</p>
               </div>
             </div>
           )}
