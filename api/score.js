@@ -112,6 +112,7 @@ async function placesSearchByKeyword({ lat, lng }, keyword) {
       location: `${lat},${lng}`,
       radius: 3000,
       keyword,
+      fields: "places.displayName,places.types,places.id",
       key: mapsKey
     }
   });
