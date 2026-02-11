@@ -6,6 +6,7 @@ function App() {
   const [zipCode, setZipCode] = useState('');
   const [data, setData] = useState(null);
   const [status, setStatus] = useState('idle');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const scoreValue = data?.score ?? 65;
   const gaugeLabel = scoreValue >= 70 ? 'High Growth' : scoreValue >= 40 ? 'Balanced Growth' : 'High Risk';
@@ -27,20 +28,24 @@ function App() {
   const handleSearch = async () => {
     if (!/^[0-9]{5}$/.test(zipCode)) {
       setStatus('error');
+      setErrorMessage('Please enter a valid 5-digit zip code.');
       return;
     }
 
     setStatus('loading');
+    setErrorMessage('');
     try {
       const response = await fetch(`/api/score/${zipCode}`);
       if (!response.ok) {
-        throw new Error('Request failed');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch score data');
       }
       const payload = await response.json();
       setData(payload);
       setStatus('success');
     } catch (error) {
       setStatus('error');
+      setErrorMessage(error.message || 'Unable to fetch score. Please try again.');
     }
   };
 
@@ -106,7 +111,10 @@ function App() {
               onChange={(event) => {
                 const value = event.target.value.replace(/\D/g, '');
                 setZipCode(value);
-                if (status === 'error') setStatus('idle');
+                if (status === 'error') {
+                  setStatus('idle');
+                  setErrorMessage('');
+                }
               }}
               className="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D8E6F]/20 transition-all duration-300 placeholder:text-slate-400 text-slate-900 shadow-sm"
             />
@@ -179,8 +187,8 @@ function App() {
                 <>Enter a zip code to load a live score. The gauge will update once results are available.</>
               )}
             </p>
-            {status === 'error' && (
-              <p className="mt-3 text-sm text-rose-500 font-semibold">Please enter a valid 5-digit zip code.</p>
+            {status === 'error' && errorMessage && (
+              <p className="mt-3 text-sm text-rose-500 font-semibold">{errorMessage}</p>
             )}
           </div>
         </section>
