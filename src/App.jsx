@@ -243,8 +243,7 @@ function App() {
           </div>
         </section>
 
-        {/* Bento Grid - Only show when data is loaded */}
-        {scoreValue && (
+        {/* Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Growth Drivers Card */}
           <div className="intro-card soft-card card-gradient-emerald hover-lift rounded-[2.5rem] p-8 flex flex-col border border-white reveal-node relative" style={{ animationDelay: '0.1s' }}>
@@ -342,10 +341,8 @@ function App() {
             </div>
           </div>
         </div>
-        )}
 
-        {/* Bottom Info Banner - Only show when data is loaded */}
-        {scoreValue && (
+        {/* Bottom Info Banner */}
         <div className="intro-footer mt-16 p-8 rounded-[2.5rem] bg-white border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm reveal-node" style={{ animationDelay: '0.4s' }}>
           <div className="flex items-center gap-5">
             <div className="relative">
@@ -361,7 +358,6 @@ function App() {
             </svg>
           </button>
         </div>
-        )}
       </main>
 
       {/* Floating Action Button */}
