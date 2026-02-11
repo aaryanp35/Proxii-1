@@ -4,6 +4,7 @@ import './App.css';
 function App() {
   const [toggleState, setToggleState] = useState('live');
   const [zipCode, setZipCode] = useState('');
+  const [areaName, setAreaName] = useState('');
   const [data, setData] = useState(null);
   const [status, setStatus] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -44,6 +45,7 @@ function App() {
       }
       const payload = await response.json();
       setData(payload);
+      setAreaName(payload.areaName || '');
       setStatus('success');
     } catch (error) {
       setStatus('error');
@@ -186,6 +188,9 @@ function App() {
 
           <div className="mt-10 max-w-2xl">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">Market Index Analysis</h1>
+            {status === 'success' && areaName && (
+              <p className="text-2xl md:text-3xl font-bold text-[#2D8E6F] mb-4">{areaName}</p>
+            )}
             <p className="text-slate-500 leading-relaxed text-lg">
               {status === 'success' && data?.zipcode ? (
                 <>Zip <span className="text-slate-900 font-semibold">({data.zipcode})</span> shows a {gaugeLabel.toLowerCase()} profile. Current investment signal is <span className={`${gaugeTextClass} font-bold underline decoration-2 underline-offset-4`}>{gaugeLabel}</span>.</>

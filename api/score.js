@@ -84,8 +84,25 @@ async function geocodeZip(zipcode) {
     throw new Error("Zip code not found.");
   }
 
-  const location = response.data.results[0].geometry.location;
-  return { lat: location.lat, lng: location.lng };
+  const result = response.data.results[0];
+  const location = result.geometry.location;
+  const formattedAddress = result.formatted_address;
+  
+  // Extract city/area name (first component, usually city or main area)
+  const addressComponents = result.address_components;
+  let areaName = formattedAddress;
+  
+  // Try to extract city or locality name
+  const cityComponent = addressComponents.find(c => c.types.includes('locality'));
+  const adminArea = addressComponents.find(c => c.types.includes('administrative_area_level_1'));
+  
+  if (cityComponent) {
+    areaName = cityComponent.long_name;
+  } else if (adminArea) {
+    areaName = adminArea.long_name;
+  }
+  
+  return { lat: location.lat, lng: location.lng, areaName };
 }
 
 async function placesSearchByKeyword({ lat, lng }, keyword) {
@@ -149,6 +166,7 @@ async function scoreZipcode(zipcode) {
 
   return {
     zipcode,
+    areaName: center.areaName,
     center,
     score: normalizeScore(rawScore),
     rawScore,
