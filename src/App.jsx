@@ -200,8 +200,7 @@ function App() {
         </section>
 
         {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Growth Drivers Card */}
           <div className="soft-card card-gradient-emerald hover-lift rounded-[2.5rem] p-8 flex flex-col border border-white reveal-node relative" style={{ animationDelay: '0.1s' }}>
             {status === 'loading' && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-[2.5rem] z-20"></div>}
@@ -280,64 +279,6 @@ function App() {
                     <span className="text-xs text-slate-400 font-semibold">x{item.count}</span>
                   </div>
                 ))
-              )}
-            </div>
-          </div>
-
-          {/* Market Sentiment Card */}
-          <div className="soft-card card-gradient-blue hover-lift rounded-[2.5rem] p-8 flex flex-col lg:col-span-1 md:col-span-2 border border-white reveal-node relative" style={{ animationDelay: '0.3s' }}>
-            {status === 'loading' && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-[2.5rem] z-20"></div>}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-2xl bg-blue-500/10 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-slate-900">Sentiment</h3>
-              </div>
-              <div className="flex items-center gap-1.5 text-[#2D8E6F] bg-[#2D8E6F]/10 px-2 py-1 rounded-lg">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4" />
-                </svg>
-                <span className="text-xs font-black">+12.4%</span>
-              </div>
-            </div>
-
-            <div className="flex-1 flex flex-col justify-end min-h-[180px] relative z-10">
-              {status === 'loading' ? (
-                <div className="space-y-6">
-                  <div className="h-10 bg-slate-50 rounded-2xl animate-pulse w-1/2"></div>
-                  <div className="space-y-2">
-                    <div className="h-3 bg-slate-50 rounded-full animate-pulse w-1/3"></div>
-                  </div>
-                  <div className="w-full h-28 bg-slate-50 rounded-2xl animate-pulse"></div>
-                </div>
-              ) : (
-                <>
-                  <div className="mb-6">
-                    <p className="text-4xl font-bold text-slate-900 tracking-tight">$1.24M</p>
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.15em] mt-1">Avg Listing Value</p>
-                  </div>
-                  
-                  <div className="w-full h-28 relative">
-                    <svg className="w-full h-full overflow-visible" viewBox="0 0 100 40" preserveAspectRatio="none">
-                      <defs>
-                        <linearGradient id="warm-blue-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.15" />
-                          <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
-                        </linearGradient>
-                      </defs>
-                      <path className="fill-[url(#warm-blue-gradient)]" d="M0 35 C10 32, 20 38, 30 25 C40 12, 50 20, 60 18 C70 16, 80 8, 100 5 V40 H0 Z" />
-                      <path className="fill-none stroke-blue-500" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" d="M0 35 C10 32, 20 38, 30 25 C40 12, 50 20, 60 18 C70 16, 80 8, 100 5" style={{ strokeDasharray: 120, strokeDashoffset: 120, animation: 'draw 3s cubic-bezier(0.16, 1, 0.3, 1) forwards' }} />
-                    </svg>
-                  </div>
-                  <div className="flex justify-between mt-5 text-[10px] text-slate-400 font-black uppercase tracking-widest">
-                    <span>2019</span>
-                    <span>2021</span>
-                    <span>2024</span>
-                  </div>
-                </>
               )}
             </div>
           </div>
