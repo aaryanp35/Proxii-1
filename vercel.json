@@ -1,7 +1,4 @@
 {
-  "buildCommand": "cd proxii-frontend && npm install && npm run build",
-  "outputDirectory": "proxii-frontend/dist",
-  "framework": null,
   "rewrites": [
     {
       "source": "/api/score/:zipcode",
