@@ -58,12 +58,22 @@ function normalizeScore(rawScore) {
 
 async function geocodeZip(zipcode) {
   const url = "https://maps.googleapis.com/maps/api/geocode/json";
-  const response = await axios.get(url, {
-    params: {
-      address: zipcode,
-      key: mapsKey
-    }
-  });
+
+  // Minimal country bias: prefer US if pure 5-digit; prefer CA if matches Canadian pattern
+  const canadaRegex = /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/;
+  const usRegex = /^[0-9]{5}$/;
+
+  const params = { key: mapsKey };
+  if (usRegex.test(zipcode)) {
+    params.components = `postal_code:${zipcode}|country:US`;
+  } else if (canadaRegex.test(zipcode)) {
+    params.components = `postal_code:${zipcode}|country:CA`;
+  } else {
+    // Fallback to address for other international formats
+    params.address = zipcode;
+  }
+
+  const response = await axios.get(url, { params });
 
   if (!response.data.results || response.data.results.length === 0) {
     throw new Error("Zip code not found.");
@@ -163,14 +173,17 @@ async function scoreZipcode(zipcode) {
 }
 
 app.get("/api/score/:zipcode", async (req, res) => {
-  const zipcode = String(req.params.zipcode || "").trim();
+  const zipcodeRaw = String(req.params.zipcode || "").trim();
+  const zipcode = zipcodeRaw.toUpperCase();
 
   if (!mapsKey) {
     return res.status(500).json({ error: "Maps API key not configured. Set MAPS_API_KEY in environment." });
   }
 
-  if (!/^[0-9]{5}$/.test(zipcode)) {
-    return res.status(400).json({ error: "Zip code must be 5 digits." });
+  // Accept US (5-digit), Canada (A1A 1A1), many European formats and UK
+  const postalCodeRegex = /^([0-9]{5}|[A-Z]\d[A-Z]\s?\d[A-Z]\d|[0-9]{4,6}|[A-Z]{1,2}\d{1,2}[A-Z\d]?\s?\d[A-Z]{2})$/;
+  if (!postalCodeRegex.test(zipcode)) {
+    return res.status(400).json({ error: "Invalid postal code format. Supports US, Canada, and common European formats." });
   }
 
   try {
