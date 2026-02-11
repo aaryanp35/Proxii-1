@@ -245,6 +245,7 @@ async function scoreZipcode(zipcode) {
 
   return {
     zipcode,
+    areaName: center.areaName,
     center,
     score,
     category,
