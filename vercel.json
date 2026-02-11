@@ -1,6 +1,6 @@
 {
-  "installCommand": "cd proxii-frontend && npm install",
-  "buildCommand": "cd proxii-frontend && npm run build",
+  "installCommand": "npm run install-frontend",
+  "buildCommand": "npm run build",
   "outputDirectory": "proxii-frontend/dist",
   "rewrites": [
     {

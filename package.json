@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "install-frontend": "npm install --prefix proxii-frontend",
+    "build": "npm run build --prefix proxii-frontend"
   },
   "dependencies": {
     "axios": "^1.4.0",
