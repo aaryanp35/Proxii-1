@@ -1,18 +1,11 @@
 {
-  "builds": [
+  "installCommand": "cd proxii-frontend && npm install",
+  "buildCommand": "cd proxii-frontend && npm run build",
+  "outputDirectory": "proxii-frontend/dist",
+  "rewrites": [
     {
-      "src": "proxii-frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
-    },
-    {
-      "src": "api/score.js",
-      "use": "@vercel/node"
+      "source": "/api/score/:zipcode",
+      "destination": "/api/score.js"
     }
-  ],
-  "routes": [
-    { "src": "/api/score/(.*)", "dest": "/api/score.js?zipcode=$1" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
