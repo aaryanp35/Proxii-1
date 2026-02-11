@@ -180,8 +180,10 @@ export default async (req, res) => {
     return res.status(500).json({ error: "Maps API key not configured." });
   }
 
-  if (!/^[0-9]{5}$/.test(zipcode)) {
-    return res.status(400).json({ error: "Zip code must be 5 digits." });
+  // Supports: US (5-digit), Canada (A1A 1A1), and European formats
+  const postalCodeRegex = /^([0-9]{5}|[A-Z]\d[A-Z]\s?\d[A-Z]\d|[0-9]{4,6}|[A-Z]{1,2}\d{1,2}[A-Z\d]?\s?\d[A-Z]{2})$/;
+  if (!postalCodeRegex.test(zipcode.trim())) {
+    return res.status(400).json({ error: "Invalid postal code format. Supports US, Canada, and Europe." });
   }
 
   try {

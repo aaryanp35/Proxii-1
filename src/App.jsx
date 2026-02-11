@@ -26,9 +26,11 @@ function App() {
   }, [scoreValue]);
 
   const handleSearch = async () => {
-    if (!/^[0-9]{5}$/.test(zipCode)) {
+    // Supports: US (5-digit), Canada (A1A 1A1), and European formats
+    const postalCodeRegex = /^([0-9]{5}|[A-Z]\d[A-Z]\s?\d[A-Z]\d|[0-9]{4,6}|[A-Z]{1,2}\d{1,2}[A-Z\d]?\s?\d[A-Z]{2})$/;
+    if (!postalCodeRegex.test(zipCode.trim())) {
       setStatus('error');
-      setErrorMessage('Please enter a valid 5-digit zip code.');
+      setErrorMessage('Please enter a valid postal code (US, Canada, or Europe).');
       return;
     }
 
@@ -103,13 +105,11 @@ function App() {
             </svg>
             <input
               type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={5}
-              placeholder="Enter Zip Code"
+              maxLength={20}
+              placeholder="Zip/Postal Code"
               value={zipCode}
               onChange={(event) => {
-                const value = event.target.value.replace(/\D/g, '');
+                const value = event.target.value.toUpperCase().trim();
                 setZipCode(value);
                 if (status === 'error') {
                   setStatus('idle');
