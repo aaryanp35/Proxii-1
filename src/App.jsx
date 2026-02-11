@@ -98,9 +98,16 @@ function App() {
             </svg>
             <input
               type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={5}
               placeholder="Enter Zip Code"
               value={zipCode}
-              onChange={(event) => setZipCode(event.target.value)}
+              onChange={(event) => {
+                const value = event.target.value.replace(/\D/g, '');
+                setZipCode(value);
+                if (status === 'error') setStatus('idle');
+              }}
               className="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D8E6F]/20 transition-all duration-300 placeholder:text-slate-400 text-slate-900 shadow-sm"
             />
             <button
