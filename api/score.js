@@ -1,17 +1,6 @@
-const express = require("express");
 const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
 
-const app = express();
-const port = process.env.PORT || 3000;
 const mapsKey = process.env.MAPS_API_KEY;
-const cachePath = path.join(__dirname, "cache.json");
-const cacheTtlMs = 12 * 60 * 60 * 1000;
-
-if (!mapsKey) {
-  console.warn("Missing MAPS_API_KEY env var.");
-}
 
 const weights = {
   positive: [
@@ -29,43 +18,17 @@ const weights = {
   ]
 };
 
-function loadCache() {
-  try {
-    const raw = fs.readFileSync(cachePath, "utf8");
-    return JSON.parse(raw);
-  } catch (error) {
-    return {};
-  }
-}
-
-function saveCache(cache) {
-  fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2));
-}
-
-function isCacheValid(entry) {
-  return entry && Date.now() - entry.timestamp < cacheTtlMs;
-}
-
 function normalizeScore(rawScore) {
-  // Use sigmoid function for more realistic distribution
-  // Score of 0 raw -> 50, positive values curve up, negative curve down
-  // This makes extreme scores (0 or 100) much harder to achieve
-  const k = 0.15; // Steepness factor - lower = more spread out
+  const k = 0.15;
   const sigmoid = 100 / (1 + Math.exp(-k * rawScore));
-  
-  // Adjust center point - raw score of 0 should give ~45-50
   const adjusted = sigmoid * 0.95 + 2.5;
-  
   return Math.max(0, Math.min(100, Math.round(adjusted)));
 }
 
 async function geocodeZip(zipcode) {
   const url = "https://maps.googleapis.com/maps/api/geocode/json";
   const response = await axios.get(url, {
-    params: {
-      address: zipcode,
-      key: mapsKey
-    }
+    params: { address: zipcode, key: mapsKey }
   });
 
   if (!response.data.results || response.data.results.length === 0) {
@@ -73,10 +36,7 @@ async function geocodeZip(zipcode) {
   }
 
   const location = response.data.results[0].geometry.location;
-  return {
-    lat: location.lat,
-    lng: location.lng
-  };
+  return { lat: location.lat, lng: location.lng };
 }
 
 async function placesSearchByKeyword({ lat, lng }, keyword) {
@@ -89,7 +49,6 @@ async function placesSearchByKeyword({ lat, lng }, keyword) {
       key: mapsKey
     }
   });
-
   return response.data.results || [];
 }
 
@@ -150,47 +109,27 @@ async function scoreZipcode(zipcode) {
   };
 }
 
-app.get("/api/score/:zipcode", async (req, res) => {
-  const zipcode = String(req.params.zipcode || "").trim();
+module.exports = async (req, res) => {
+  // Enable CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  const zipcode = String(req.query.zipcode || "").trim();
 
   if (!/^[0-9]{5}$/.test(zipcode)) {
     return res.status(400).json({ error: "Zip code must be 5 digits." });
   }
 
   try {
-    const cache = loadCache();
-    const cachedEntry = cache[zipcode];
-
-    if (isCacheValid(cachedEntry)) {
-      return res.json({
-        ...cachedEntry.data,
-        cached: true
-      });
-    }
-
     const data = await scoreZipcode(zipcode);
-
-    cache[zipcode] = {
-      timestamp: Date.now(),
-      data
-    };
-    saveCache(cache);
-
-    return res.json({
-      ...data,
-      cached: false
-    });
+    return res.status(200).json({ ...data, cached: false });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Unable to score zip code." });
   }
-});
-
-// Simple health endpoint for quick smoke tests
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
-});
-
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-});
+};

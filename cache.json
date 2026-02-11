@@ -1,1 +1,587 @@
-{}
+{
+  "10115": {
+    "timestamp": 1770843201662,
+    "data": {
+      "zipcode": "10115",
+      "center": {
+        "lat": 40.8108356,
+        "lng": -73.96371839999999
+      },
+      "score": 97,
+      "rawScore": 145.2,
+      "indicators": [
+        {
+          "label": "Whole Foods/Organic Grocers",
+          "count": 42,
+          "weight": 3.5,
+          "score": 147
+        },
+        {
+          "label": "Specialty Coffee",
+          "count": 37,
+          "weight": 2.5,
+          "score": 92.5
+        },
+        {
+          "label": "Fast Food Chains",
+          "count": 56,
+          "weight": -1.5,
+          "score": -84
+        },
+        {
+          "label": "Pilates/Yoga",
+          "count": 38,
+          "weight": 1.8,
+          "score": 68.4
+        },
+        {
+          "label": "Payday Loans",
+          "count": 11,
+          "weight": -5,
+          "score": -55
+        },
+        {
+          "label": "Industrial Zones",
+          "count": 20,
+          "weight": -2.5,
+          "score": -50
+        },
+        {
+          "label": "Boutique Gyms",
+          "count": 29,
+          "weight": 1.5,
+          "score": 43.5
+        },
+        {
+          "label": "Pawn Shops",
+          "count": 10,
+          "weight": -4,
+          "score": -40
+        },
+        {
+          "label": "Wine Bars",
+          "count": 19,
+          "weight": 1.2,
+          "score": 22.8
+        }
+      ],
+      "drivers": [
+        {
+          "label": "Whole Foods/Organic Grocers",
+          "count": 42,
+          "score": 147
+        },
+        {
+          "label": "Specialty Coffee",
+          "count": 37,
+          "score": 92.5
+        },
+        {
+          "label": "Pilates/Yoga",
+          "count": 38,
+          "score": 68.4
+        },
+        {
+          "label": "Boutique Gyms",
+          "count": 29,
+          "score": 43.5
+        },
+        {
+          "label": "Wine Bars",
+          "count": 19,
+          "score": 22.8
+        }
+      ],
+      "risks": [
+        {
+          "label": "Fast Food Chains",
+          "count": 56,
+          "score": -84
+        },
+        {
+          "label": "Payday Loans",
+          "count": 11,
+          "score": -55
+        },
+        {
+          "label": "Industrial Zones",
+          "count": 20,
+          "score": -50
+        },
+        {
+          "label": "Pawn Shops",
+          "count": 10,
+          "score": -40
+        }
+      ]
+    }
+  },
+  "16501": {
+    "timestamp": 1770843139895,
+    "data": {
+      "zipcode": "16501",
+      "center": {
+        "lat": 42.1188322,
+        "lng": -80.09399780000001
+      },
+      "score": 13,
+      "rawScore": -13.900000000000006,
+      "indicators": [
+        {
+          "label": "Whole Foods/Organic Grocers",
+          "count": 26,
+          "weight": 3.5,
+          "score": 91
+        },
+        {
+          "label": "Industrial Zones",
+          "count": 31,
+          "weight": -2.5,
+          "score": -77.5
+        },
+        {
+          "label": "Fast Food Chains",
+          "count": 37,
+          "weight": -1.5,
+          "score": -55.5
+        },
+        {
+          "label": "Specialty Coffee",
+          "count": 14,
+          "weight": 2.5,
+          "score": 35
+        },
+        {
+          "label": "Pawn Shops",
+          "count": 7,
+          "weight": -4,
+          "score": -28
+        },
+        {
+          "label": "Payday Loans",
+          "count": 4,
+          "weight": -5,
+          "score": -20
+        },
+        {
+          "label": "Wine Bars",
+          "count": 15,
+          "weight": 1.2,
+          "score": 18
+        },
+        {
+          "label": "Pilates/Yoga",
+          "count": 7,
+          "weight": 1.8,
+          "score": 12.6
+        },
+        {
+          "label": "Boutique Gyms",
+          "count": 7,
+          "weight": 1.5,
+          "score": 10.5
+        }
+      ],
+      "drivers": [
+        {
+          "label": "Whole Foods/Organic Grocers",
+          "count": 26,
+          "score": 91
+        },
+        {
+          "label": "Specialty Coffee",
+          "count": 14,
+          "score": 35
+        },
+        {
+          "label": "Wine Bars",
+          "count": 15,
+          "score": 18
+        },
+        {
+          "label": "Pilates/Yoga",
+          "count": 7,
+          "score": 12.6
+        },
+        {
+          "label": "Boutique Gyms",
+          "count": 7,
+          "score": 10.5
+        }
+      ],
+      "risks": [
+        {
+          "label": "Industrial Zones",
+          "count": 31,
+          "score": -77.5
+        },
+        {
+          "label": "Fast Food Chains",
+          "count": 37,
+          "score": -55.5
+        },
+        {
+          "label": "Pawn Shops",
+          "count": 7,
+          "score": -28
+        },
+        {
+          "label": "Payday Loans",
+          "count": 4,
+          "score": -20
+        }
+      ]
+    }
+  },
+  "94025": {
+    "timestamp": 1770843107783,
+    "data": {
+      "zipcode": "94025",
+      "center": {
+        "lat": 37.4484914,
+        "lng": -122.1802812
+      },
+      "score": 97,
+      "rawScore": 108.5,
+      "indicators": [
+        {
+          "label": "Fast Food Chains",
+          "count": 38,
+          "weight": -1.5,
+          "score": -57
+        },
+        {
+          "label": "Specialty Coffee",
+          "count": 22,
+          "weight": 2.5,
+          "score": 55
+        },
+        {
+          "label": "Pilates/Yoga",
+          "count": 29,
+          "weight": 1.8,
+          "score": 52.2
+        },
+        {
+          "label": "Whole Foods/Organic Grocers",
+          "count": 13,
+          "weight": 3.5,
+          "score": 45.5
+        },
+        {
+          "label": "Boutique Gyms",
+          "count": 17,
+          "weight": 1.5,
+          "score": 25.5
+        },
+        {
+          "label": "Wine Bars",
+          "count": 19,
+          "weight": 1.2,
+          "score": 22.8
+        },
+        {
+          "label": "Payday Loans",
+          "count": 3,
+          "weight": -5,
+          "score": -15
+        },
+        {
+          "label": "Industrial Zones",
+          "count": 5,
+          "weight": -2.5,
+          "score": -12.5
+        },
+        {
+          "label": "Pawn Shops",
+          "count": 2,
+          "weight": -4,
+          "score": -8
+        }
+      ],
+      "drivers": [
+        {
+          "label": "Specialty Coffee",
+          "count": 22,
+          "score": 55
+        },
+        {
+          "label": "Pilates/Yoga",
+          "count": 29,
+          "score": 52.2
+        },
+        {
+          "label": "Whole Foods/Organic Grocers",
+          "count": 13,
+          "score": 45.5
+        },
+        {
+          "label": "Boutique Gyms",
+          "count": 17,
+          "score": 25.5
+        },
+        {
+          "label": "Wine Bars",
+          "count": 19,
+          "score": 22.8
+        }
+      ],
+      "risks": [
+        {
+          "label": "Fast Food Chains",
+          "count": 38,
+          "score": -57
+        },
+        {
+          "label": "Payday Loans",
+          "count": 3,
+          "score": -15
+        },
+        {
+          "label": "Industrial Zones",
+          "count": 5,
+          "score": -12.5
+        },
+        {
+          "label": "Pawn Shops",
+          "count": 2,
+          "score": -8
+        }
+      ]
+    }
+  },
+  "94026": {
+    "timestamp": 1770843187589,
+    "data": {
+      "zipcode": "94026",
+      "center": {
+        "lat": 37.4481851,
+        "lng": -122.1810176
+      },
+      "score": 97,
+      "rawScore": 104.70000000000002,
+      "indicators": [
+        {
+          "label": "Fast Food Chains",
+          "count": 44,
+          "weight": -1.5,
+          "score": -66
+        },
+        {
+          "label": "Specialty Coffee",
+          "count": 22,
+          "weight": 2.5,
+          "score": 55
+        },
+        {
+          "label": "Pilates/Yoga",
+          "count": 28,
+          "weight": 1.8,
+          "score": 50.4
+        },
+        {
+          "label": "Whole Foods/Organic Grocers",
+          "count": 14,
+          "weight": 3.5,
+          "score": 49
+        },
+        {
+          "label": "Boutique Gyms",
+          "count": 16,
+          "weight": 1.5,
+          "score": 24
+        },
+        {
+          "label": "Wine Bars",
+          "count": 19,
+          "weight": 1.2,
+          "score": 22.8
+        },
+        {
+          "label": "Payday Loans",
+          "count": 3,
+          "weight": -5,
+          "score": -15
+        },
+        {
+          "label": "Pawn Shops",
+          "count": 2,
+          "weight": -4,
+          "score": -8
+        },
+        {
+          "label": "Industrial Zones",
+          "count": 3,
+          "weight": -2.5,
+          "score": -7.5
+        }
+      ],
+      "drivers": [
+        {
+          "label": "Specialty Coffee",
+          "count": 22,
+          "score": 55
+        },
+        {
+          "label": "Pilates/Yoga",
+          "count": 28,
+          "score": 50.4
+        },
+        {
+          "label": "Whole Foods/Organic Grocers",
+          "count": 14,
+          "score": 49
+        },
+        {
+          "label": "Boutique Gyms",
+          "count": 16,
+          "score": 24
+        },
+        {
+          "label": "Wine Bars",
+          "count": 19,
+          "score": 22.8
+        }
+      ],
+      "risks": [
+        {
+          "label": "Fast Food Chains",
+          "count": 44,
+          "score": -66
+        },
+        {
+          "label": "Payday Loans",
+          "count": 3,
+          "score": -15
+        },
+        {
+          "label": "Pawn Shops",
+          "count": 2,
+          "score": -8
+        },
+        {
+          "label": "Industrial Zones",
+          "count": 3,
+          "score": -7.5
+        }
+      ]
+    }
+  },
+  "94027": {
+    "timestamp": 1770843162677,
+    "data": {
+      "zipcode": "94027",
+      "center": {
+        "lat": 37.45117949999999,
+        "lng": -122.2029832
+      },
+      "score": 97,
+      "rawScore": 30.60000000000001,
+      "indicators": [
+        {
+          "label": "Fast Food Chains",
+          "count": 37,
+          "weight": -1.5,
+          "score": -55.5
+        },
+        {
+          "label": "Specialty Coffee",
+          "count": 13,
+          "weight": 2.5,
+          "score": 32.5
+        },
+        {
+          "label": "Pilates/Yoga",
+          "count": 18,
+          "weight": 1.8,
+          "score": 32.4
+        },
+        {
+          "label": "Whole Foods/Organic Grocers",
+          "count": 7,
+          "weight": 3.5,
+          "score": 24.5
+        },
+        {
+          "label": "Payday Loans",
+          "count": 4,
+          "weight": -5,
+          "score": -20
+        },
+        {
+          "label": "Wine Bars",
+          "count": 16,
+          "weight": 1.2,
+          "score": 19.2
+        },
+        {
+          "label": "Boutique Gyms",
+          "count": 12,
+          "weight": 1.5,
+          "score": 18
+        },
+        {
+          "label": "Industrial Zones",
+          "count": 5,
+          "weight": -2.5,
+          "score": -12.5
+        },
+        {
+          "label": "Pawn Shops",
+          "count": 2,
+          "weight": -4,
+          "score": -8
+        }
+      ],
+      "drivers": [
+        {
+          "label": "Specialty Coffee",
+          "count": 13,
+          "score": 32.5
+        },
+        {
+          "label": "Pilates/Yoga",
+          "count": 18,
+          "score": 32.4
+        },
+        {
+          "label": "Whole Foods/Organic Grocers",
+          "count": 7,
+          "score": 24.5
+        },
+        {
+          "label": "Wine Bars",
+          "count": 16,
+          "score": 19.2
+        },
+        {
+          "label": "Boutique Gyms",
+          "count": 12,
+          "score": 18
+        }
+      ],
+      "risks": [
+        {
+          "label": "Fast Food Chains",
+          "count": 37,
+          "score": -55.5
+        },
+        {
+          "label": "Payday Loans",
+          "count": 4,
+          "score": -20
+        },
+        {
+          "label": "Industrial Zones",
+          "count": 5,
+          "score": -12.5
+        },
+        {
+          "label": "Pawn Shops",
+          "count": 2,
+          "score": -8
+        }
+      ]
+    }
+  }
+}

@@ -1,31 +1,28 @@
 .agents/skills/superdesign/INIT.md
 .agents/skills/superdesign/SUPERDESIGN.md
 
-# Node
+# Dependencies
 node_modules/
-npm-debug.log*
-package-lock.json
+proxii-frontend/node_modules/
 
-# Env files
+# Build outputs
+dist/
+proxii-frontend/dist/
+.vercel/
+
+# Environment
 .env
-.env.*
+.env.local
+.env.*.local
 
-# Runtime cache
+# Cache
 cache.json
 
-# VS Code
-.vscode/
-
-# macOS
-.DS_Store
-
-# IDEs
-.idea/
-
 # Logs
-logs/
 *.log
+npm-debug.log*
 
-# Optional
-dist/
-build/
+# OS
+.DS_Store
+.vscode/
+.idea/
