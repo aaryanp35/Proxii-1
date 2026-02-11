@@ -66,8 +66,8 @@ function App() {
           <span className="text-2xl font-bold tracking-tight text-slate-900">Proxii</span>
         </div>
 
-        <div className="hidden lg:flex items-center gap-6">
-          <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shadow-inner">
+        <div className="hidden md:flex items-center gap-4 lg:gap-6">
+          <div className="hidden lg:flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shadow-inner">
             <button
               onClick={() => handleToggle('live')}
               className={`px-5 py-2 text-[11px] font-black uppercase tracking-widest flex items-center gap-2 transition-all rounded-xl ${
@@ -92,7 +92,7 @@ function App() {
           </div>
 
           <form
-            className="w-[320px] relative group"
+            className="w-64 lg:w-[320px] relative group"
             onSubmit={(event) => {
               event.preventDefault();
               handleSearch();
@@ -143,6 +143,12 @@ function App() {
         
         {/* Hero Section */}
         <section className="mb-20 flex flex-col items-center text-center reveal-node">
+          {status === 'loading' && (
+            <div className="absolute top-32 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-20">
+              <div className="w-12 h-12 border-4 border-[#2D8E6F]/20 border-t-[#2D8E6F] rounded-full animate-spin"></div>
+              <p className="text-sm font-semibold text-slate-600">Loading results for {zipCode}...</p>
+            </div>
+          )}
           <div className="relative w-80 h-80 md:w-[420px] md:h-[420px] flex items-center justify-center">
             <div className="absolute inset-0 bg-[#E8B34F]/10 blur-[120px] rounded-full"></div>
             
@@ -197,7 +203,8 @@ function App() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
           {/* Growth Drivers Card */}
-          <div className="soft-card card-gradient-emerald hover-lift rounded-[2.5rem] p-8 flex flex-col border border-white reveal-node" style={{ animationDelay: '0.1s' }}>
+          <div className="soft-card card-gradient-emerald hover-lift rounded-[2.5rem] p-8 flex flex-col border border-white reveal-node relative" style={{ animationDelay: '0.1s' }}>
+            {status === 'loading' && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-[2.5rem] z-20"></div>}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-2xl bg-[#2D8E6F]/10 flex items-center justify-center">
@@ -214,7 +221,13 @@ function App() {
             </div>
 
             <div className="space-y-3 relative z-10">
-              {drivers.length === 0 ? (
+              {status === 'loading' ? (
+                <>
+                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse"></div>
+                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse"></div>
+                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse"></div>
+                </>
+              ) : drivers.length === 0 ? (
                 <div className="p-4 rounded-2xl bg-slate-50 text-sm text-slate-400">No drivers yet.</div>
               ) : (
                 drivers.map((item, idx) => (
@@ -231,7 +244,8 @@ function App() {
           </div>
 
           {/* Risk Indicators Card */}
-          <div className="soft-card card-gradient-rose hover-lift rounded-[2.5rem] p-8 flex flex-col border border-white reveal-node" style={{ animationDelay: '0.2s' }}>
+          <div className="soft-card card-gradient-rose hover-lift rounded-[2.5rem] p-8 flex flex-col border border-white reveal-node relative" style={{ animationDelay: '0.2s' }}>
+            {status === 'loading' && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-[2.5rem] z-20"></div>}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-2xl bg-[#D4465E]/10 flex items-center justify-center">
@@ -248,7 +262,13 @@ function App() {
             </div>
 
             <div className="space-y-3 relative z-10">
-              {risks.length === 0 ? (
+              {status === 'loading' ? (
+                <>
+                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse"></div>
+                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse"></div>
+                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse"></div>
+                </>
+              ) : risks.length === 0 ? (
                 <div className="p-4 rounded-2xl bg-slate-50 text-sm text-slate-400">No risks yet.</div>
               ) : (
                 risks.map((item, idx) => (
@@ -265,7 +285,8 @@ function App() {
           </div>
 
           {/* Market Sentiment Card */}
-          <div className="soft-card card-gradient-blue hover-lift rounded-[2.5rem] p-8 flex flex-col lg:col-span-1 md:col-span-2 border border-white reveal-node" style={{ animationDelay: '0.3s' }}>
+          <div className="soft-card card-gradient-blue hover-lift rounded-[2.5rem] p-8 flex flex-col lg:col-span-1 md:col-span-2 border border-white reveal-node relative" style={{ animationDelay: '0.3s' }}>
+            {status === 'loading' && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-[2.5rem] z-20"></div>}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-2xl bg-blue-500/10 flex items-center justify-center">
@@ -284,28 +305,40 @@ function App() {
             </div>
 
             <div className="flex-1 flex flex-col justify-end min-h-[180px] relative z-10">
-              <div className="mb-6">
-                <p className="text-4xl font-bold text-slate-900 tracking-tight">$1.24M</p>
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.15em] mt-1">Avg Listing Value</p>
-              </div>
-              
-              <div className="w-full h-28 relative">
-                <svg className="w-full h-full overflow-visible" viewBox="0 0 100 40" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="warm-blue-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.15" />
-                      <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path className="fill-[url(#warm-blue-gradient)]" d="M0 35 C10 32, 20 38, 30 25 C40 12, 50 20, 60 18 C70 16, 80 8, 100 5 V40 H0 Z" />
-                  <path className="fill-none stroke-blue-500" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" d="M0 35 C10 32, 20 38, 30 25 C40 12, 50 20, 60 18 C70 16, 80 8, 100 5" style={{ strokeDasharray: 120, strokeDashoffset: 120, animation: 'draw 3s cubic-bezier(0.16, 1, 0.3, 1) forwards' }} />
-                </svg>
-              </div>
-              <div className="flex justify-between mt-5 text-[10px] text-slate-400 font-black uppercase tracking-widest">
-                <span>2019</span>
-                <span>2021</span>
-                <span>2024</span>
-              </div>
+              {status === 'loading' ? (
+                <div className="space-y-6">
+                  <div className="h-10 bg-slate-50 rounded-2xl animate-pulse w-1/2"></div>
+                  <div className="space-y-2">
+                    <div className="h-3 bg-slate-50 rounded-full animate-pulse w-1/3"></div>
+                  </div>
+                  <div className="w-full h-28 bg-slate-50 rounded-2xl animate-pulse"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-6">
+                    <p className="text-4xl font-bold text-slate-900 tracking-tight">$1.24M</p>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.15em] mt-1">Avg Listing Value</p>
+                  </div>
+                  
+                  <div className="w-full h-28 relative">
+                    <svg className="w-full h-full overflow-visible" viewBox="0 0 100 40" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="warm-blue-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.15" />
+                          <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                      <path className="fill-[url(#warm-blue-gradient)]" d="M0 35 C10 32, 20 38, 30 25 C40 12, 50 20, 60 18 C70 16, 80 8, 100 5 V40 H0 Z" />
+                      <path className="fill-none stroke-blue-500" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" d="M0 35 C10 32, 20 38, 30 25 C40 12, 50 20, 60 18 C70 16, 80 8, 100 5" style={{ strokeDasharray: 120, strokeDashoffset: 120, animation: 'draw 3s cubic-bezier(0.16, 1, 0.3, 1) forwards' }} />
+                    </svg>
+                  </div>
+                  <div className="flex justify-between mt-5 text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                    <span>2019</span>
+                    <span>2021</span>
+                    <span>2024</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
