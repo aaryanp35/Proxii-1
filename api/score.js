@@ -8,25 +8,69 @@ const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 const mapsKey = process.env.MAPS_API_KEY;
 
 const weights = {
+  // Tier 1: Premium positive indicators (highest impact)
   positive: [
-    { label: "Specialty Coffee", keywords: ["specialty coffee", "third wave coffee"], weight: 2.5 },
-    { label: "Whole Foods/Organic Grocers", keywords: ["whole foods", "organic grocery", "natural foods"], weight: 3.5 },
-    { label: "Pilates/Yoga", keywords: ["pilates", "yoga studio"], weight: 1.8 },
-    { label: "Boutique Gyms", keywords: ["boutique gym", "fitness studio", "spin studio"], weight: 1.5 },
-    { label: "Wine Bars", keywords: ["wine bar"], weight: 1.2 }
+    { label: "Upscale Shopping Districts", keywords: ["luxury mall", "upscale shopping", "designer stores", "boutique shopping"], weight: 4.5, tier: "premium" },
+    { label: "Fine Dining Restaurants", keywords: ["fine dining", "michelin star", "upscale restaurant"], weight: 4.2, tier: "premium" },
+    { label: "Whole Foods/Organic Markets", keywords: ["whole foods", "organic grocery", "natural foods", "farm to table"], weight: 3.8, tier: "premium" },
+    { label: "Specialty Coffee Shops", keywords: ["specialty coffee", "third wave coffee", "artisan coffee", "craft coffee"], weight: 3.5, tier: "premium" },
+    { label: "Premium Fitness Centers", keywords: ["boutique gym", "luxury fitness", "high-end gym", "upscale gym"], weight: 3.2, tier: "premium" },
+    { label: "Yoga & Wellness Studios", keywords: ["yoga studio", "pilates studio", "wellness center", "holistic health"], weight: 3.0, tier: "premium" },
+    { label: "Wine & Spirits Bars", keywords: ["wine bar", "craft cocktails", "upscale bar", "wine lounge"], weight: 2.8, tier: "premium" },
+    { label: "Art Galleries", keywords: ["art gallery", "contemporary art", "art museum"], weight: 2.6, tier: "premium" },
+    { label: "Artisan Bakeries", keywords: ["bakery", "artisan bakery", "organic bakery", "craft bakery"], weight: 2.5, tier: "premium" },
+    { label: "Trendy Brunch Spots", keywords: ["brunch", "cafe", "bistro"], weight: 2.3, tier: "premium" },
+    
+    // Tier 2: Strong positive indicators (moderate-high impact)
+    { label: "Tech Companies & Startups", keywords: ["tech company", "startup", "tech office", "software company"], weight: 2.8, tier: "strong" },
+    { label: "Universities & Colleges", keywords: ["university", "college", "educational institution"], weight: 2.7, tier: "strong" },
+    { label: "Public Libraries", keywords: ["library", "public library"], weight: 2.5, tier: "strong" },
+    { label: "Parks & Recreation", keywords: ["public park", "nature park", "recreation center", "sports complex"], weight: 2.4, tier: "strong" },
+    { label: "Bookstores", keywords: ["bookstore", "independent bookstore"], weight: 2.2, tier: "strong" },
+    { label: "Music Venues", keywords: ["music venue", "concert hall", "live music"], weight: 2.0, tier: "strong" },
+    { label: "Theaters & Performing Arts", keywords: ["theater", "theatre", "performing arts", "concert venue"], weight: 2.1, tier: "strong" },
+    { label: "Farmers Markets", keywords: ["farmers market", "farmers market", "produce market"], weight: 2.0, tier: "strong" },
+    { label: "Health & Medical Centers", keywords: ["medical center", "health clinic", "hospital", "healthcare facility"], weight: 1.9, tier: "strong" },
+    { label: "Plant-Based Restaurants", keywords: ["vegan restaurant", "vegetarian restaurant", "plant-based"], weight: 1.8, tier: "strong" },
+    
+    // Tier 3: Moderate positive indicators (baseline improvements)
+    { label: "Craft Breweries", keywords: ["brewery", "craft brewery", "microbrewery"], weight: 1.7, tier: "moderate" },
+    { label: "Independent Restaurants", keywords: ["independent restaurant", "local restaurant"], weight: 1.6, tier: "moderate" },
+    { label: "Design & Architecture", keywords: ["design studio", "architecture firm"], weight: 1.5, tier: "moderate" },
+    { label: "Community Centers", keywords: ["community center", "community hub"], weight: 1.5, tier: "moderate" },
+    { label: "Florists & Garden Centers", keywords: ["florist", "garden center", "nursery"], weight: 1.4, tier: "moderate" },
+    { label: "Pet Friendly Venues", keywords: ["dog park", "pet friendly", "pet cafe"], weight: 1.3, tier: "moderate" },
+    { label: "Networking Spaces", keywords: ["coworking", "coworking space", "business center"], weight: 1.3, tier: "moderate" },
+    { label: "Bookbinding & Stationery", keywords: ["stationery", "printing", "bookbinding"], weight: 1.2, tier: "moderate" }
   ],
+  
+  // Tier 1: Critical negative indicators (massive penalty)
   negative: [
-    { label: "Payday Loans", keywords: ["payday loan"], weight: -5 },
-    { label: "Pawn Shops", keywords: ["pawn shop"], weight: -4 },
-    { label: "Fast Food Chains", keywords: ["fast food", "burger", "fried chicken"], weight: -1.5 },
-    { label: "Industrial Zones", keywords: ["industrial", "warehouse", "distribution"], weight: -2.5 }
+    { label: "Predatory Lending", keywords: ["payday loan", "title loan", "check cashing"], weight: -6.0, tier: "critical" },
+    { label: "Pawn & Liquor Shops", keywords: ["pawn shop", "liquor store", "check cashing"], weight: -5.5, tier: "critical" },
+    { label: "Substance Abuse Services", keywords: ["drug treatment", "rehab center", "addiction center"], weight: -5.0, tier: "critical" },
+    
+    // Tier 2: Strong negative indicators (significant penalty)
+    { label: "Fast Food Chains", keywords: ["fast food", "burger", "fried chicken", "pizza chain"], weight: -3.5, tier: "strong" },
+    { label: "Industrial & Warehouses", keywords: ["industrial", "warehouse", "distribution center", "manufacturing"], weight: -3.2, tier: "strong" },
+    { label: "Auto Repair & Body Shops", keywords: ["auto repair", "body shop", "mechanic"], weight: -2.8, tier: "strong" },
+    { label: "Used Car Lots", keywords: ["used car", "car dealership"], weight: -2.5, tier: "strong" },
+    { label: "Gas Stations & Convenience Stores", keywords: ["gas station", "convenience store", "petrol station"], weight: -2.0, tier: "strong" },
+    { label: "Discount Retail Chains", keywords: ["discount store", "dollar store", "discount retail"], weight: -1.8, tier: "strong" },
+    
+    // Tier 3: Moderate negative indicators (minor penalty)
+    { label: "Laundromats", keywords: ["laundromat", "dry cleaning"], weight: -1.5, tier: "moderate" },
+    { label: "Telecommunications Nodes", keywords: ["cell tower", "telecom", "internet cafe"], weight: -1.2, tier: "moderate" },
+    { label: "Tobacco Shops", keywords: ["tobacco", "vape shop"], weight: -1.0, tier: "moderate" },
+    { label: "Parking Lots", keywords: ["parking lot", "parking garage"], weight: -0.8, tier: "moderate" }
   ]
 };
 
 function normalizeScore(rawScore) {
-  const k = 0.15;
+  // Enhanced sigmoid with better scaling for expanded indicator range
+  const k = 0.08; // Adjusted sensitivity for larger range
   const sigmoid = 100 / (1 + Math.exp(-k * rawScore));
-  const adjusted = sigmoid * 0.95 + 2.5;
+  const adjusted = sigmoid * 0.92 + 4;
   return Math.max(0, Math.min(100, Math.round(adjusted)));
 }
 
@@ -61,7 +105,8 @@ function buildWeightedIndicators() {
   return [...weights.positive, ...weights.negative].map((item) => ({
     label: item.label,
     keywords: item.keywords,
-    weight: item.weight
+    weight: item.weight,
+    tier: item.tier || "standard"
   }));
 }
 
@@ -96,7 +141,8 @@ async function scoreZipcode(zipcode) {
         label: indicator.label,
         count,
         weight: indicator.weight,
-        score: indicatorScore
+        score: indicatorScore,
+        tier: indicator.tier
       });
     }
   }
@@ -110,11 +156,11 @@ async function scoreZipcode(zipcode) {
     drivers: indicatorHits
       .filter((item) => item.weight > 0)
       .sort((a, b) => b.score - a.score)
-      .map((item) => ({ label: item.label, count: item.count, score: item.score })),
+      .map((item) => ({ label: item.label, count: item.count, score: item.score, tier: item.tier })),
     risks: indicatorHits
       .filter((item) => item.weight < 0)
       .sort((a, b) => a.score - b.score)
-      .map((item) => ({ label: item.label, count: item.count, score: item.score }))
+      .map((item) => ({ label: item.label, count: item.count, score: item.score, tier: item.tier }))
   };
 }
 
