@@ -48,18 +48,22 @@ function isCacheValid(entry) {
   return entry && Date.now() - entry.timestamp < cacheTtlMs;
 }
 
-function normalizeScore(rawScore) {
-  // Use tanh-based scaling for smoother tails and symmetric behavior
-  const scale = 18;
+function normalizeScoreWithCategory(rawScore) {
+  const scale = 25;
   const v = Math.tanh(rawScore / scale);
   const normalized = ((v + 1) / 2) * 100;
-  return Math.max(0, Math.min(100, Math.round(normalized)));
+  const finalScore = Math.max(0, Math.min(100, Math.round(normalized)));
+  
+  let category = 'Stable/Under-invested';
+  if (finalScore >= 80) category = 'Late Stage Gentrified';
+  else if (finalScore >= 50) category = 'High-Velocity Transition';
+  
+  return { score: finalScore, category };
 }
 
 async function geocodeZip(zipcode) {
   const url = "https://maps.googleapis.com/maps/api/geocode/json";
 
-  // Minimal country bias: prefer US if pure 5-digit; prefer CA if matches Canadian pattern
   const canadaRegex = /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/;
   const usRegex = /^[0-9]{5}$/;
 
@@ -69,7 +73,6 @@ async function geocodeZip(zipcode) {
   } else if (canadaRegex.test(zipcode)) {
     params.components = `postal_code:${zipcode}|country:CA`;
   } else {
-    // Fallback to address for other international formats
     params.address = zipcode;
   }
 
@@ -79,10 +82,24 @@ async function geocodeZip(zipcode) {
     throw new Error("Zip code not found.");
   }
 
-  const location = response.data.results[0].geometry.location;
+  const result = response.data.results[0];
+  const location = result.geometry.location;
+  const addressComponents = result.address_components || [];
+  
+  let areaName = result.formatted_address;
+  const cityComponent = addressComponents.find(c => c.types.includes('locality'));
+  const adminArea = addressComponents.find(c => c.types.includes('administrative_area_level_1'));
+  
+  if (cityComponent) {
+    areaName = cityComponent.long_name;
+  } else if (adminArea) {
+    areaName = adminArea.long_name;
+  }
+
   return {
     lat: location.lat,
-    lng: location.lng
+    lng: location.lng,
+    areaName
   };
 }
 
@@ -93,11 +110,36 @@ async function placesSearchByKeyword({ lat, lng }, keyword) {
       location: `${lat},${lng}`,
       radius: 3000,
       keyword,
+      fields: "places.displayName,places.types,places.id,places.geometry",
       key: mapsKey
     }
   });
 
   return response.data.results || [];
+}
+
+// Distance decay function
+function calculateWeight(distanceMeters) {
+  if (distanceMeters <= 500) return 1.0;
+  if (distanceMeters <= 1500) return 0.5;
+  return 0.1;
+}
+
+function haversineDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function getDiminishingValue(count) {
+  if (count === 1) return 1.0;
+  if (count === 2) return 0.33;
+  return 0.13;
 }
 
 function buildWeightedIndicators() {
@@ -113,18 +155,18 @@ async function scoreZipcode(zipcode) {
   const indicators = buildWeightedIndicators();
   const seenPlaceIds = new Set();
   const indicatorHits = [];
-  let rawScore = 0;
-  const tierMultipliers = {
-    premium: 1.4,
-    strong: 1.15,
-    moderate: 1.0,
-    critical: 1.8,
-    standard: 1.0
-  };
-  const MAX_COUNT_PER_INDICATOR = 8;
+  let growthScore = 0;
+  let riskScore = 0;
+
+  const anchorKeywords = ["whole foods", "erewhon", "apple store", "trader joe"];
+  let hasAnchor = false;
+
+  const culturalPioneers = ["art gallery", "yoga studio", "architecture firm", "contemporary art", "artist studio"];
+  let culturalPioneerScore = 0;
 
   for (const indicator of indicators) {
-    let count = 0;
+    const placesForIndicator = [];
+
     for (const keyword of indicator.keywords) {
       const results = await placesSearchByKeyword(center, keyword);
       for (const place of results) {
@@ -132,34 +174,85 @@ async function scoreZipcode(zipcode) {
           continue;
         }
         seenPlaceIds.add(place.place_id);
-        count += 1;
+
+        let distance = Infinity;
+        let distanceWeight = 0.1;
+        if (place.geometry?.location?.lat && place.geometry?.location?.lng) {
+          distance = haversineDistance(
+            center.lat,
+            center.lng,
+            place.geometry.location.lat,
+            place.geometry.location.lng
+          );
+          distanceWeight = calculateWeight(distance);
+        }
+
+        placesForIndicator.push({ name: place.display_name || place.name || 'Unknown', distance, distanceWeight });
+
+        // Check for anchors
+        if (distance <= 1000) {
+          const nameStr = (place.display_name || place.name || '').toLowerCase();
+          for (const anchor of anchorKeywords) {
+            if (nameStr.includes(anchor)) {
+              hasAnchor = true;
+              break;
+            }
+          }
+        }
+
+        // Check for cultural pioneers
+        for (const keyword2 of indicator.keywords) {
+          const keywordLower = keyword2.toLowerCase();
+          for (const pioneer of culturalPioneers) {
+            if (keywordLower.includes(pioneer)) {
+              culturalPioneerScore += 20;
+              break;
+            }
+          }
+        }
       }
     }
 
-    if (count > 0) {
-      const capped = Math.min(count, MAX_COUNT_PER_INDICATOR);
-      const magnitude = Math.log1p(capped);
-      // attempt to read tier from indicator if present (some weights may not include it)
-      const tier = indicator.tier || "standard";
-      const tierMult = tierMultipliers[tier] || 1.0;
-      const indicatorScore = Math.sign(indicator.weight) * Math.abs(indicator.weight) * magnitude * tierMult;
-      rawScore += indicatorScore;
+    if (placesForIndicator.length > 0) {
+      let score = 0;
+      for (let i = 0; i < placesForIndicator.length; i++) {
+        const place = placesForIndicator[i];
+        const diminishingMult = getDiminishingValue(i + 1);
+        const weightedContribution = indicator.weight * place.distanceWeight * diminishingMult;
+        score += weightedContribution;
+      }
+
+      if (indicator.weight > 0) {
+        growthScore += score;
+      } else {
+        riskScore += score;
+      }
+
       indicatorHits.push({
         label: indicator.label,
-        count,
-        capped,
+        count: placesForIndicator.length,
         weight: indicator.weight,
-        score: indicatorScore,
-        tier
+        score: Math.round(score * 100) / 100
       });
     }
   }
 
+  const anchorMultiplier = hasAnchor ? 1.2 : 1.0;
+  const adjustedGrowthScore = growthScore * anchorMultiplier + culturalPioneerScore;
+  const rawScore = adjustedGrowthScore + riskScore;
+
+  const { score, category } = normalizeScoreWithCategory(rawScore);
+
   return {
     zipcode,
     center,
-    score: normalizeScore(rawScore),
-    rawScore,
+    score,
+    category,
+    rawScore: Math.round(rawScore * 100) / 100,
+    growthScore: Math.round(adjustedGrowthScore * 100) / 100,
+    riskScore: Math.round(riskScore * 100) / 100,
+    hasAnchor,
+    culturalPioneerScore: Math.round(culturalPioneerScore * 100) / 100,
     indicators: indicatorHits.sort((a, b) => Math.abs(b.score) - Math.abs(a.score)),
     drivers: indicatorHits
       .filter((item) => item.weight > 0)
