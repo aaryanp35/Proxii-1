@@ -1,8 +1,10 @@
-const express = require("express");
-const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
+import express from "express";
+import axios from "axios";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const port = process.env.PORT || 3000;
 const mapsKey = process.env.MAPS_API_KEY;
@@ -47,16 +49,11 @@ function isCacheValid(entry) {
 }
 
 function normalizeScore(rawScore) {
-  // Use sigmoid function for more realistic distribution
-  // Score of 0 raw -> 50, positive values curve up, negative curve down
-  // This makes extreme scores (0 or 100) much harder to achieve
-  const k = 0.15; // Steepness factor - lower = more spread out
-  const sigmoid = 100 / (1 + Math.exp(-k * rawScore));
-  
-  // Adjust center point - raw score of 0 should give ~45-50
-  const adjusted = sigmoid * 0.95 + 2.5;
-  
-  return Math.max(0, Math.min(100, Math.round(adjusted)));
+  // Use tanh-based scaling for smoother tails and symmetric behavior
+  const scale = 18;
+  const v = Math.tanh(rawScore / scale);
+  const normalized = ((v + 1) / 2) * 100;
+  return Math.max(0, Math.min(100, Math.round(normalized)));
 }
 
 async function geocodeZip(zipcode) {
@@ -107,6 +104,14 @@ async function scoreZipcode(zipcode) {
   const seenPlaceIds = new Set();
   const indicatorHits = [];
   let rawScore = 0;
+  const tierMultipliers = {
+    premium: 1.4,
+    strong: 1.15,
+    moderate: 1.0,
+    critical: 1.8,
+    standard: 1.0
+  };
+  const MAX_COUNT_PER_INDICATOR = 8;
 
   for (const indicator of indicators) {
     let count = 0;
@@ -122,13 +127,20 @@ async function scoreZipcode(zipcode) {
     }
 
     if (count > 0) {
-      const indicatorScore = count * indicator.weight;
+      const capped = Math.min(count, MAX_COUNT_PER_INDICATOR);
+      const magnitude = Math.log1p(capped);
+      // attempt to read tier from indicator if present (some weights may not include it)
+      const tier = indicator.tier || "standard";
+      const tierMult = tierMultipliers[tier] || 1.0;
+      const indicatorScore = Math.sign(indicator.weight) * Math.abs(indicator.weight) * magnitude * tierMult;
       rawScore += indicatorScore;
       indicatorHits.push({
         label: indicator.label,
         count,
+        capped,
         weight: indicator.weight,
-        score: indicatorScore
+        score: indicatorScore,
+        tier
       });
     }
   }
@@ -152,6 +164,10 @@ async function scoreZipcode(zipcode) {
 
 app.get("/api/score/:zipcode", async (req, res) => {
   const zipcode = String(req.params.zipcode || "").trim();
+
+  if (!mapsKey) {
+    return res.status(500).json({ error: "Maps API key not configured. Set MAPS_API_KEY in environment." });
+  }
 
   if (!/^[0-9]{5}$/.test(zipcode)) {
     return res.status(400).json({ error: "Zip code must be 5 digits." });

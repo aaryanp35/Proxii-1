@@ -67,11 +67,12 @@ const weights = {
 };
 
 function normalizeScore(rawScore) {
-  // Enhanced sigmoid with better scaling for expanded indicator range
-  const k = 0.08; // Adjusted sensitivity for larger range
-  const sigmoid = 100 / (1 + Math.exp(-k * rawScore));
-  const adjusted = sigmoid * 0.92 + 4;
-  return Math.max(0, Math.min(100, Math.round(adjusted)));
+  // Use tanh-based scaling for smoother tails and symmetric behavior
+  // Map rawScore -> [-1,1] via tanh(raw/scale) then to [0,100]
+  const scale = 18; // larger = less sensitive; tweak for desired spread
+  const v = Math.tanh(rawScore / scale);
+  const normalized = ((v + 1) / 2) * 100;
+  return Math.max(0, Math.min(100, Math.round(normalized)));
 }
 
 async function geocodeZip(zipcode) {
@@ -135,6 +136,15 @@ async function scoreZipcode(zipcode) {
   const seenPlaceIds = new Set();
   const indicatorHits = [];
   let rawScore = 0;
+  // Tier multipliers amplify/reduce the base weight depending on tier
+  const tierMultipliers = {
+    premium: 1.4,
+    strong: 1.15,
+    moderate: 1.0,
+    critical: 1.8,
+    standard: 1.0
+  };
+  const MAX_COUNT_PER_INDICATOR = 8; // cap to avoid runaway counts
 
   // For each indicator, run all keyword searches in parallel
   for (const indicator of indicators) {
@@ -153,14 +163,20 @@ async function scoreZipcode(zipcode) {
       }
     }
     if (count > 0) {
-      const indicatorScore = count * indicator.weight;
+      const capped = Math.min(count, MAX_COUNT_PER_INDICATOR);
+      // diminishing returns via log(1 + capped)
+      const magnitude = Math.log1p(capped);
+      const tierMult = tierMultipliers[indicator.tier] || 1.0;
+      // Keep weight sign and apply magnitude and tier multiplier
+      const indicatorScore = Math.sign(indicator.weight) * Math.abs(indicator.weight) * magnitude * tierMult;
       rawScore += indicatorScore;
       indicatorHits.push({
         label: indicator.label,
         count,
+        capped,
         weight: indicator.weight,
-        score: indicatorScore,
-        tier: indicator.tier
+        tier: indicator.tier,
+        score: indicatorScore
       });
     }
   }
