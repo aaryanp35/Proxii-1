@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import { getNationalStats } from './utils/percentile';
 import { NationalPercentileHover } from './components/NationalPercentileHover';
+import { FactorHover } from './components/FactorHover';
 
 function App() {
   const [toggleState, setToggleState] = useState('live');
@@ -162,35 +163,35 @@ function App() {
             <div className="sparkle absolute" style={{ top: '20%', right: '15%', fontSize: '18px', animationDelay: '0.8s' }}>✨</div>
             <div className="sparkle absolute" style={{ bottom: '25%', left: '10%', fontSize: '20px', animationDelay: '1.2s' }}>✨</div>
 
-            <NationalPercentileHover 
-              percentile={nationalStats.percentile} 
-              rankLabel={nationalStats.rankLabel}
-              topPercentage={nationalStats.topPercentage}
-            >
-              {/* Gauge */}
-              <svg className="w-full h-full transform -rotate-90 filter drop-shadow-sm">
-                <circle
-                  cx="50%"
-                  cy="50%"
-                  r="42%"
-                  className="stroke-current text-slate-100 fill-none"
-                  strokeWidth="12"
-                />
-                <circle
-                  id="main-gauge"
-                  cx="50%"
-                  cy="50%"
-                  r="42%"
-                  className={`gauge-ring stroke-current ${gaugeClass} fill-none ${status === 'loading' ? 'animate-pulse' : ''}`}
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                  style={{ strokeDasharray: 264, strokeDashoffset: 264 }}
-                />
-              </svg>
-            </NationalPercentileHover>
+            {/* Gauge */}
+            <svg className="w-full h-full transform -rotate-90 filter drop-shadow-sm">
+              <circle
+                cx="50%"
+                cy="50%"
+                r="42%"
+                className="stroke-current text-slate-100 fill-none"
+                strokeWidth="12"
+              />
+              <circle
+                id="main-gauge"
+                cx="50%"
+                cy="50%"
+                r="42%"
+                className={`gauge-ring stroke-current ${gaugeClass} fill-none ${status === 'loading' ? 'animate-pulse' : ''}`}
+                strokeWidth="12"
+                strokeLinecap="round"
+                style={{ strokeDasharray: 264, strokeDashoffset: 264 }}
+              />
+            </svg>
 
             <div className="absolute flex flex-col items-center">
-              <span className="text-7xl md:text-9xl font-bold text-slate-900 tracking-tighter">{scoreValue}</span>
+              <NationalPercentileHover 
+                percentile={nationalStats.percentile} 
+                rankLabel={nationalStats.rankLabel}
+                topPercentage={nationalStats.topPercentage}
+              >
+                <span className="text-7xl md:text-9xl font-bold text-slate-900 tracking-tighter cursor-help">{scoreValue}</span>
+              </NationalPercentileHover>
               <span className={`${gaugeTextClass} font-bold tracking-[0.2em] text-xs md:text-sm uppercase mt-1`}>{gaugeLabel}</span>
             </div>
           </div>
@@ -244,13 +245,20 @@ function App() {
                 <div className="p-4 rounded-2xl bg-slate-50 text-sm text-slate-400">No drivers yet.</div>
               ) : (
                 drivers.map((item, idx) => (
-                  <div key={`${item.label}-${idx}`} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-[#2D8E6F]/5 cursor-pointer transition-all group/item">
-                    <div className="flex items-center gap-4">
-                      <span className="text-xl opacity-80">●</span>
-                      <span className="text-sm font-semibold text-slate-700 group-hover/item:text-[#2D8E6F] transition-colors">{item.label}</span>
+                  <FactorHover 
+                    key={`${item.label}-${idx}`}
+                    label={item.label}
+                    score={item.score}
+                    isDriver={true}
+                  >
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-[#2D8E6F]/5 cursor-help transition-all group/item">
+                      <div className="flex items-center gap-4">
+                        <span className="text-xl opacity-80">●</span>
+                        <span className="text-sm font-semibold text-slate-700 group-hover/item:text-[#2D8E6F] transition-colors">{item.label}</span>
+                      </div>
+                      <span className="text-xs text-slate-400 font-semibold">+{item.score.toFixed(1)}</span>
                     </div>
-                    <span className="text-xs text-slate-400 font-semibold">+{item.score.toFixed(1)}</span>
-                  </div>
+                  </FactorHover>
                 ))
               )}
             </div>
@@ -285,13 +293,20 @@ function App() {
                 <div className="p-4 rounded-2xl bg-slate-50 text-sm text-slate-400">No risks yet.</div>
               ) : (
                 risks.map((item, idx) => (
-                  <div key={`${item.label}-${idx}`} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-[#D4465E]/5 cursor-pointer transition-all group/item">
-                    <div className="flex items-center gap-4">
-                      <span className="text-xl opacity-80">●</span>
-                      <span className="text-sm font-semibold text-slate-700 group-hover/item:text-[#D4465E] transition-colors">{item.label}</span>
+                  <FactorHover 
+                    key={`${item.label}-${idx}`}
+                    label={item.label}
+                    score={item.score}
+                    isDriver={false}
+                  >
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-[#D4465E]/5 cursor-help transition-all group/item">
+                      <div className="flex items-center gap-4">
+                        <span className="text-xl opacity-80">●</span>
+                        <span className="text-sm font-semibold text-slate-700 group-hover/item:text-[#D4465E] transition-colors">{item.label}</span>
+                      </div>
+                      <span className="text-xs text-slate-400 font-semibold">{item.score.toFixed(1)}</span>
                     </div>
-                    <span className="text-xs text-slate-400 font-semibold">{item.score.toFixed(1)}</span>
-                  </div>
+                  </FactorHover>
                 ))
               )}
             </div>
