@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
+import { getNationalStats } from './utils/percentile';
+import { NationalPercentileHover } from './components/NationalPercentileHover';
 
 function App() {
   const [toggleState, setToggleState] = useState('live');
@@ -10,6 +12,7 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('');
 
   const scoreValue = data?.score ?? 65;
+  const nationalStats = getNationalStats(scoreValue);
   const gaugeLabel = scoreValue >= 70 ? 'High Growth' : scoreValue >= 40 ? 'Balanced Growth' : 'High Risk';
   const gaugeClass = scoreValue >= 70 ? 'text-emerald-400' : scoreValue >= 40 ? 'text-amber-400' : 'text-rose-400';
   const gaugeTextClass = scoreValue >= 70 ? 'text-emerald-500' : scoreValue >= 40 ? 'text-amber-500' : 'text-rose-500';
@@ -159,26 +162,32 @@ function App() {
             <div className="sparkle absolute" style={{ top: '20%', right: '15%', fontSize: '18px', animationDelay: '0.8s' }}>✨</div>
             <div className="sparkle absolute" style={{ bottom: '25%', left: '10%', fontSize: '20px', animationDelay: '1.2s' }}>✨</div>
 
-            {/* Gauge */}
-            <svg className="w-full h-full transform -rotate-90 filter drop-shadow-sm">
-              <circle
-                cx="50%"
-                cy="50%"
-                r="42%"
-                className="stroke-current text-slate-100 fill-none"
-                strokeWidth="12"
-              />
-              <circle
-                id="main-gauge"
-                cx="50%"
-                cy="50%"
-                r="42%"
-                className={`gauge-ring stroke-current ${gaugeClass} fill-none ${status === 'loading' ? 'animate-pulse' : ''}`}
-                strokeWidth="12"
-                strokeLinecap="round"
-                style={{ strokeDasharray: 264, strokeDashoffset: 264 }}
-              />
-            </svg>
+            <NationalPercentileHover 
+              percentile={nationalStats.percentile} 
+              rankLabel={nationalStats.rankLabel}
+              topPercentage={nationalStats.topPercentage}
+            >
+              {/* Gauge */}
+              <svg className="w-full h-full transform -rotate-90 filter drop-shadow-sm">
+                <circle
+                  cx="50%"
+                  cy="50%"
+                  r="42%"
+                  className="stroke-current text-slate-100 fill-none"
+                  strokeWidth="12"
+                />
+                <circle
+                  id="main-gauge"
+                  cx="50%"
+                  cy="50%"
+                  r="42%"
+                  className={`gauge-ring stroke-current ${gaugeClass} fill-none ${status === 'loading' ? 'animate-pulse' : ''}`}
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                  style={{ strokeDasharray: 264, strokeDashoffset: 264 }}
+                />
+              </svg>
+            </NationalPercentileHover>
 
             <div className="absolute flex flex-col items-center">
               <span className="text-7xl md:text-9xl font-bold text-slate-900 tracking-tighter">{scoreValue}</span>
@@ -240,7 +249,7 @@ function App() {
                       <span className="text-xl opacity-80">●</span>
                       <span className="text-sm font-semibold text-slate-700 group-hover/item:text-[#2D8E6F] transition-colors">{item.label}</span>
                     </div>
-                    <span className="text-xs text-slate-400 font-semibold">x{item.count}</span>
+                    <span className="text-xs text-slate-400 font-semibold">+{item.score.toFixed(1)}</span>
                   </div>
                 ))
               )}
@@ -281,7 +290,7 @@ function App() {
                       <span className="text-xl opacity-80">●</span>
                       <span className="text-sm font-semibold text-slate-700 group-hover/item:text-[#D4465E] transition-colors">{item.label}</span>
                     </div>
-                    <span className="text-xs text-slate-400 font-semibold">x{item.count}</span>
+                    <span className="text-xs text-slate-400 font-semibold">{item.score.toFixed(1)}</span>
                   </div>
                 ))
               )}
