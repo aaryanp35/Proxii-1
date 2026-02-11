@@ -58,8 +58,8 @@ function App() {
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
       {/* Navigation */}
-      <nav className="glass-nav sticky top-0 z-50 w-full py-4 px-6 md:px-12 flex justify-between items-center">
-        <div className="flex items-center gap-3">
+      <nav className="glass-nav sticky top-0 z-50 w-full py-3 px-6 md:py-4 md:px-12 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0">
+        <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="w-10 h-10 bg-[#2D8E6F] rounded-xl flex items-center justify-center shadow-lg shadow-[#2D8E6F]/25">
             <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path d="M5 3a2 2 0 012-2h6a2 2 0 012 2v2h4a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2h4V3z" />
@@ -68,7 +68,7 @@ function App() {
           <span className="text-2xl font-bold tracking-tight text-slate-900">Proxii</span>
         </div>
 
-        <div className="hidden md:flex items-center gap-4 lg:gap-6">
+        <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 lg:gap-6 flex-1 md:flex-none">
           <div className="hidden lg:flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shadow-inner">
             <button
               onClick={() => handleToggle('live')}
@@ -94,7 +94,7 @@ function App() {
           </div>
 
           <form
-            className="w-64 lg:w-[320px] relative group"
+            className="w-full sm:w-80 md:w-64 lg:w-[320px] relative group"
             onSubmit={(event) => {
               event.preventDefault();
               handleSearch();
@@ -127,7 +127,7 @@ function App() {
           </form>
         </div>
 
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-3 md:gap-8 w-full md:w-auto justify-between md:justify-end">
           <div className="hidden md:flex items-center gap-8">
             <a href="#" className="text-sm text-[#2D8E6F] font-bold">Dashboard</a>
             <a href="#" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Market Intel</a>
