@@ -1,4 +1,4 @@
-const axios = require("axios");
+import axios from "axios";
 
 const mapsKey = process.env.MAPS_API_KEY;
 
@@ -109,7 +109,7 @@ async function scoreZipcode(zipcode) {
   };
 }
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
   // Enable CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -121,6 +121,10 @@ module.exports = async (req, res) => {
 
   const zipcode = String(req.query.zipcode || "").trim();
 
+  if (!mapsKey) {
+    return res.status(500).json({ error: "Maps API key not configured." });
+  }
+
   if (!/^[0-9]{5}$/.test(zipcode)) {
     return res.status(400).json({ error: "Zip code must be 5 digits." });
   }
@@ -129,7 +133,10 @@ module.exports = async (req, res) => {
     const data = await scoreZipcode(zipcode);
     return res.status(200).json({ ...data, cached: false });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Unable to score zip code." });
+    console.error("Score API error:", error.message, error.response?.data);
+    return res.status(500).json({ 
+      error: error.message || "Unable to score zip code.",
+      details: error.response?.data?.error_message || error.response?.data?.status
+    });
   }
 };
