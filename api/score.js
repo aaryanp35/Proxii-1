@@ -1,4 +1,9 @@
+
 import axios from "axios";
+
+// Simple in-memory cache (expires after 10 min)
+const cache = {};
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
 const mapsKey = process.env.MAPS_API_KEY;
 
@@ -60,6 +65,7 @@ function buildWeightedIndicators() {
   }));
 }
 
+
 async function scoreZipcode(zipcode) {
   const center = await geocodeZip(zipcode);
   const indicators = buildWeightedIndicators();
@@ -67,10 +73,14 @@ async function scoreZipcode(zipcode) {
   const indicatorHits = [];
   let rawScore = 0;
 
+  // For each indicator, run all keyword searches in parallel
   for (const indicator of indicators) {
+    // Run all keyword searches in parallel
+    const resultsArr = await Promise.all(
+      indicator.keywords.map((keyword) => placesSearchByKeyword(center, keyword))
+    );
     let count = 0;
-    for (const keyword of indicator.keywords) {
-      const results = await placesSearchByKeyword(center, keyword);
+    for (const results of resultsArr) {
       for (const place of results) {
         if (!place.place_id || seenPlaceIds.has(place.place_id)) {
           continue;
@@ -79,7 +89,6 @@ async function scoreZipcode(zipcode) {
         count += 1;
       }
     }
-
     if (count > 0) {
       const indicatorScore = count * indicator.weight;
       rawScore += indicatorScore;
@@ -130,7 +139,13 @@ export default async (req, res) => {
   }
 
   try {
+    // Check cache first
+    const now = Date.now();
+    if (cache[zipcode] && (now - cache[zipcode].ts < CACHE_TTL)) {
+      return res.status(200).json({ ...cache[zipcode].data, cached: true });
+    }
     const data = await scoreZipcode(zipcode);
+    cache[zipcode] = { data, ts: now };
     return res.status(200).json({ ...data, cached: false });
   } catch (error) {
     console.error("Score API error:", error.message, error.response?.data);
