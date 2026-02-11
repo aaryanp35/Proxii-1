@@ -194,7 +194,7 @@ function App() {
                   rankLabel={nationalStats.rankLabel}
                   topPercentage={nationalStats.topPercentage}
                 >
-                  <span className="text-7xl md:text-9xl font-bold text-slate-900 tracking-tighter cursor-help">{scoreValue}</span>
+                  <span className="text-7xl md:text-9xl font-bold text-slate-900 tracking-tighter cursor-pointer">{scoreValue}</span>
                 </NationalPercentileHover>
                 <span className={`${gaugeTextClass} font-bold tracking-[0.2em] text-xs md:text-sm uppercase mt-1`}>{gaugeLabel}</span>
               </div>
@@ -280,7 +280,7 @@ function App() {
                     score={item.score}
                     isDriver={true}
                   >
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-[#2D8E6F]/5 cursor-help transition-all group/item">
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-[#2D8E6F]/5 cursor-pointer transition-all duration-300 ease-out group/item">
                       <div className="flex items-center gap-4">
                         <span className="text-xl opacity-80">●</span>
                         <span className="text-sm font-semibold text-slate-700 group-hover/item:text-[#2D8E6F] transition-colors">{item.label}</span>
@@ -328,7 +328,7 @@ function App() {
                     score={item.score}
                     isDriver={false}
                   >
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-[#D4465E]/5 cursor-help transition-all group/item">
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-[#D4465E]/5 cursor-pointer transition-all duration-300 ease-out group/item">
                       <div className="flex items-center gap-4">
                         <span className="text-xl opacity-80">●</span>
                         <span className="text-sm font-semibold text-slate-700 group-hover/item:text-[#D4465E] transition-colors">{item.label}</span>
