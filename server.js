@@ -81,8 +81,8 @@ function logisticNormalize(x, mid = 35, scale = 18) {
 }
 
 function densityBonus(totalPlaces) {
-  // Reduced multiplier from 6 to 2.5 to prevent score inflation
-  return Math.log1p(totalPlaces) * 2.5;
+  // Significantly reduced multiplier to 0.8 to prevent poor areas from scoring high
+  return Math.log1p(totalPlaces) * 0.8;
 }
 
 function incomeAdjustment(medianIncome) {
