@@ -11,6 +11,32 @@ const mapsKey = process.env.MAPS_API_KEY;
 const cachePath = path.join(__dirname, "cache.json");
 const cacheTtlMs = 12 * 60 * 60 * 1000;
 
+// Median Household Income by Zipcode
+const incomeByZipcode = {
+  // Ultra-Wealthy (>$200k)
+  "90210": 275000, // Beverly Hills, CA
+  "94301": 265000, // Palo Alto, CA
+  "94025": 280000, // Menlo Park, CA
+  "10021": 310000, // Upper East Side, NYC
+  "02116": 220000, // Beacon Hill, Boston
+  "60611": 240000, // Chicago Gold Coast
+  
+  // Very Wealthy ($150k-$200k)
+  "94088": 185000, // Sunnyvale/Mountain View area
+  "32963": 175000, // Vero Beach, FL
+  "28202": 165000, // Charlotte, NC (Uptown)
+  "77019": 195000, // Houston (Upscale area)
+  "98009": 180000, // Bellevue, WA
+  "33139": 170000, // Coral Gables, FL
+  
+  // Rural/Underinvested
+  "39113": 28000,  // Rural Mississippi
+};
+
+function getMedianHouseholdIncome(zipcode) {
+  return incomeByZipcode[zipcode] || null;
+}
+
 if (!mapsKey) {
   console.warn("Missing MAPS_API_KEY env var.");
 }
@@ -48,21 +74,43 @@ function isCacheValid(entry) {
   return entry && Date.now() - entry.timestamp < cacheTtlMs;
 }
 
-function normalizeScoreWithCategory(rawScore) {
-  const baselineScore = 20; // Push poor areas to near 0
-  const scaleFactor = 800;  // Controls steepness
-  const range = 80;         // Wider spread from 0-100
+function normalizeScoreWithCategory(rawScore, medianIncome = null, totalPlaces = 0) {
+  // Base logistic normalization
+  const baselineScore = 20;
+  const scaleFactor = 800;
+  const range = 80;
   
   const tanhValue = Math.tanh(rawScore / scaleFactor);
-  const normalized = baselineScore + range * tanhValue;
+  let normalized = baselineScore + range * tanhValue;
+  
+  // Income adjustment layer: Ultra-wealthy areas get minimum floor of 70
+  let isSuburbanLuxury = false;
+  if (medianIncome && medianIncome > 150000) {
+    // Set minimum score floor to 70 for ultra-wealthy enclaves
+    normalized = Math.max(normalized, 70);
+    
+    // Suburban Luxury flag: low density + extreme income
+    const isDensityLow = totalPlaces < 20;
+    if (isDensityLow && medianIncome > 150000) {
+      isSuburbanLuxury = true;
+    }
+  }
+  
   const finalScore = Math.max(0, Math.min(100, Math.round(normalized)));
   
+  // Categorize with suburban luxury override
   let category = 'Under-invested';
-  if (finalScore >= 80) category = 'Elite';
-  else if (finalScore >= 50) category = 'Growth Potential';
-  else if (finalScore >= 30) category = 'Market Standard';
+  if (isSuburbanLuxury) {
+    category = 'Exclusive Residential';
+  } else if (finalScore >= 80) {
+    category = 'Elite';
+  } else if (finalScore >= 50) {
+    category = 'Growth Potential';
+  } else if (finalScore >= 30) {
+    category = 'Market Standard';
+  }
   
-  return { score: finalScore, category };
+  return { score: finalScore, category, isSuburbanLuxury };
 }
 
 async function geocodeZip(zipcode) {
@@ -245,7 +293,11 @@ async function scoreZipcode(zipcode) {
   const adjustedGrowthScore = growthScore * anchorMultiplier + culturalPioneerScore;
   const rawScore = adjustedGrowthScore + riskScore;
 
-  const { score, category } = normalizeScoreWithCategory(rawScore);
+  // Income adjustment layer
+  const medianIncome = getMedianHouseholdIncome(zipcode);
+  const totalPlaces = seenPlaceIds.size;
+  
+  const { score, category, isSuburbanLuxury } = normalizeScoreWithCategory(rawScore, medianIncome, totalPlaces);
 
   return {
     zipcode,
@@ -253,11 +305,14 @@ async function scoreZipcode(zipcode) {
     center,
     score,
     category,
+    medianIncome,
+    isSuburbanLuxury,
     rawScore: Math.round(rawScore * 100) / 100,
     growthScore: Math.round(adjustedGrowthScore * 100) / 100,
     riskScore: Math.round(riskScore * 100) / 100,
     hasAnchor,
     culturalPioneerScore: Math.round(culturalPioneerScore * 100) / 100,
+    businessDensity: totalPlaces,
     indicators: indicatorHits.sort((a, b) => Math.abs(b.score) - Math.abs(a.score)),
     drivers: indicatorHits
       .filter((item) => item.weight > 0)
