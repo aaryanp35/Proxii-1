@@ -74,43 +74,50 @@ function isCacheValid(entry) {
   return entry && Date.now() - entry.timestamp < cacheTtlMs;
 }
 
-function normalizeScoreWithCategory(rawScore, medianIncome = null, totalPlaces = 0) {
-  // Base logistic normalization
-  const baselineScore = 20;
-  const scaleFactor = 800;
-  const range = 80;
-  
-  const tanhValue = Math.tanh(rawScore / scaleFactor);
-  let normalized = baselineScore + range * tanhValue;
-  
-  // Income adjustment layer: Ultra-wealthy areas get minimum floor of 70
-  let isSuburbanLuxury = false;
-  if (medianIncome && medianIncome > 150000) {
-    // Set minimum score floor to 70 for ultra-wealthy enclaves
-    normalized = Math.max(normalized, 70);
-    
-    // Suburban Luxury flag: low density + extreme income
-    const isDensityLow = totalPlaces < 20;
-    if (isDensityLow && medianIncome > 150000) {
-      isSuburbanLuxury = true;
-    }
-  }
-  
-  const finalScore = Math.max(0, Math.min(100, Math.round(normalized)));
-  
-  // Categorize with suburban luxury override
-  let category = 'Under-invested';
-  if (isSuburbanLuxury) {
-    category = 'Exclusive Residential';
-  } else if (finalScore >= 80) {
-    category = 'Elite';
-  } else if (finalScore >= 50) {
-    category = 'Growth Potential';
-  } else if (finalScore >= 30) {
-    category = 'Market Standard';
-  }
-  
-  return { score: finalScore, category, isSuburbanLuxury };
+// ================= NORMALIZATION ENGINE =====================
+
+function logisticNormalize(x, mid = 35, scale = 18) {
+  return 100 / (1 + Math.exp(-(x - mid) / scale));
+}
+
+function densityBonus(totalPlaces) {
+  return Math.log1p(totalPlaces) * 6;
+}
+
+function incomeAdjustment(medianIncome) {
+  if (!medianIncome) return 0;
+
+  if (medianIncome >= 250000) return 18;
+  if (medianIncome >= 200000) return 14;
+  if (medianIncome >= 150000) return 10;
+  if (medianIncome >= 100000) return 6;
+  if (medianIncome >= 70000) return 3;
+  if (medianIncome >= 45000) return -2;
+
+  return -6;
+}
+
+function normalizeScoreWithCategory(rawScore, medianIncome, totalPlaces) {
+  let base = logisticNormalize(rawScore);
+
+  base += densityBonus(totalPlaces);
+  base += incomeAdjustment(medianIncome);
+
+  // Soft clamp
+  let finalScore = Math.max(0, Math.min(100, Math.round(base)));
+
+  let category = "Under-invested";
+
+  if (finalScore >= 90) category = "Global Elite";
+  else if (finalScore >= 80) category = "Prime";
+  else if (finalScore >= 60) category = "Strong";
+  else if (finalScore >= 40) category = "Developing";
+  else if (finalScore >= 25) category = "Struggling";
+
+  return {
+    score: finalScore,
+    category
+  };
 }
 
 async function geocodeZip(zipcode) {
@@ -202,34 +209,34 @@ function buildWeightedIndicators() {
   }));
 }
 
+// ================= SCORING ENGINE =====================
+
 async function scoreZipcode(zipcode) {
   const center = await geocodeZip(zipcode);
   const indicators = buildWeightedIndicators();
   const seenPlaceIds = new Set();
   const indicatorHits = [];
+
   let growthScore = 0;
   let riskScore = 0;
 
-  const anchorKeywords = ["whole foods", "erewhon", "apple store", "trader joe"];
+  const anchorKeywords = ["whole foods", "erewhon", "apple store", "trader joe", "lulu", "tesla"];
   let hasAnchor = false;
-
-  const culturalPioneers = ["art gallery", "yoga studio", "architecture firm", "contemporary art", "artist studio"];
-  let culturalPioneerScore = 0;
 
   for (const indicator of indicators) {
     const placesForIndicator = [];
 
     for (const keyword of indicator.keywords) {
       const results = await placesSearchByKeyword(center, keyword);
+
       for (const place of results) {
-        if (!place.place_id || seenPlaceIds.has(place.place_id)) {
-          continue;
-        }
+        if (!place.place_id || seenPlaceIds.has(place.place_id)) continue;
         seenPlaceIds.add(place.place_id);
 
         let distance = Infinity;
-        let distanceWeight = 0.1;
-        if (place.geometry?.location?.lat && place.geometry?.location?.lng) {
+        let distanceWeight = 0.15;
+
+        if (place.geometry?.location) {
           distance = haversineDistance(
             center.lat,
             center.lng,
@@ -239,47 +246,30 @@ async function scoreZipcode(zipcode) {
           distanceWeight = calculateWeight(distance);
         }
 
-        placesForIndicator.push({ name: place.display_name || place.name || 'Unknown', distance, distanceWeight });
+        const nameStr = (place.display_name || place.name || "").toLowerCase();
 
-        // Check for anchors
-        if (distance <= 1000) {
-          const nameStr = (place.display_name || place.name || '').toLowerCase();
-          for (const anchor of anchorKeywords) {
-            if (nameStr.includes(anchor)) {
-              hasAnchor = true;
-              break;
-            }
+        for (const anchor of anchorKeywords) {
+          if (nameStr.includes(anchor)) {
+            hasAnchor = true;
           }
         }
 
-        // Check for cultural pioneers
-        for (const keyword2 of indicator.keywords) {
-          const keywordLower = keyword2.toLowerCase();
-          for (const pioneer of culturalPioneers) {
-            if (keywordLower.includes(pioneer)) {
-              culturalPioneerScore += 20;
-              break;
-            }
-          }
-        }
+        placesForIndicator.push({ distanceWeight });
       }
     }
 
+    let score = 0;
+
+    for (let i = 0; i < placesForIndicator.length; i++) {
+      const diminishing = getDiminishingValue(i + 1);
+      score += indicator.weight * placesForIndicator[i].distanceWeight * diminishing;
+    }
+
+    if (indicator.weight > 0) growthScore += score;
+    else riskScore += score;
+
+    // Track for drivers/risks output
     if (placesForIndicator.length > 0) {
-      let score = 0;
-      for (let i = 0; i < placesForIndicator.length; i++) {
-        const place = placesForIndicator[i];
-        const diminishingMult = getDiminishingValue(i + 1);
-        const weightedContribution = indicator.weight * place.distanceWeight * diminishingMult;
-        score += weightedContribution;
-      }
-
-      if (indicator.weight > 0) {
-        growthScore += score;
-      } else {
-        riskScore += score;
-      }
-
       indicatorHits.push({
         label: indicator.label,
         count: placesForIndicator.length,
@@ -289,15 +279,18 @@ async function scoreZipcode(zipcode) {
     }
   }
 
-  const anchorMultiplier = hasAnchor ? 1.2 : 1.0;
-  const adjustedGrowthScore = growthScore * anchorMultiplier + culturalPioneerScore;
-  const rawScore = adjustedGrowthScore + riskScore;
+  if (hasAnchor) growthScore *= 1.15;
 
-  // Income adjustment layer
+  const rawScore = growthScore + riskScore;
+
   const medianIncome = getMedianHouseholdIncome(zipcode);
   const totalPlaces = seenPlaceIds.size;
-  
-  const { score, category, isSuburbanLuxury } = normalizeScoreWithCategory(rawScore, medianIncome, totalPlaces);
+
+  const { score, category } = normalizeScoreWithCategory(
+    rawScore,
+    medianIncome,
+    totalPlaces
+  );
 
   return {
     zipcode,
@@ -305,14 +298,12 @@ async function scoreZipcode(zipcode) {
     center,
     score,
     category,
-    medianIncome,
-    isSuburbanLuxury,
     rawScore: Math.round(rawScore * 100) / 100,
-    growthScore: Math.round(adjustedGrowthScore * 100) / 100,
+    growthScore: Math.round(growthScore * 100) / 100,
     riskScore: Math.round(riskScore * 100) / 100,
-    hasAnchor,
-    culturalPioneerScore: Math.round(culturalPioneerScore * 100) / 100,
     businessDensity: totalPlaces,
+    medianIncome,
+    hasAnchor,
     indicators: indicatorHits.sort((a, b) => Math.abs(b.score) - Math.abs(a.score)),
     drivers: indicatorHits
       .filter((item) => item.weight > 0)
