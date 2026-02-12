@@ -96,44 +96,50 @@ const weights = {
   ]
 };
 
-function normalizeScoreWithCategory(rawScore, medianIncome = null, totalPlaces = 0) {
-  // Base logistic normalization
-  const baselineScore = 20;
-  const scaleFactor = 800;
-  const range = 80;
-  
-  const tanhValue = Math.tanh(rawScore / scaleFactor);
-  let normalized = baselineScore + range * tanhValue;
-  
-  // Income adjustment layer: Ultra-wealthy areas get minimum floor of 70
-  let isSuburbanLuxury = false;
-  if (medianIncome && medianIncome > 150000) {
-    // Set minimum score floor to 70 for ultra-wealthy enclaves
-    normalized = Math.max(normalized, 70);
-    
-    // Suburban Luxury flag: low density + extreme income
-    // Calculate density: total places found in search radius
-    const isDensityLow = totalPlaces < 20;
-    if (isDensityLow && medianIncome > 150000) {
-      isSuburbanLuxury = true;
-    }
-  }
-  
-  const finalScore = Math.max(0, Math.min(100, Math.round(normalized)));
-  
-  // Categorize with suburban luxury override
-  let category = 'Under-invested';
-  if (isSuburbanLuxury) {
-    category = 'Exclusive Residential';
-  } else if (finalScore >= 80) {
-    category = 'Elite Growth';
-  } else if (finalScore >= 50) {
-    category = 'High Growth';
-  } else if (finalScore >= 30) {
-    category = 'Market Standard';
-  }
-  
-  return { score: finalScore, category, isSuburbanLuxury };
+// ================= NORMALIZATION ENGINE =====================
+
+function logisticNormalize(x, mid = 35, scale = 18) {
+  return 100 / (1 + Math.exp(-(x - mid) / scale));
+}
+
+function densityBonus(totalPlaces) {
+  return Math.log1p(totalPlaces) * 6;
+}
+
+function incomeAdjustment(medianIncome) {
+  if (!medianIncome) return 0;
+
+  if (medianIncome >= 250000) return 18;
+  if (medianIncome >= 200000) return 14;
+  if (medianIncome >= 150000) return 10;
+  if (medianIncome >= 100000) return 6;
+  if (medianIncome >= 70000) return 3;
+  if (medianIncome >= 45000) return -2;
+
+  return -6;
+}
+
+function normalizeScoreWithCategory(rawScore, medianIncome, totalPlaces) {
+  let base = logisticNormalize(rawScore);
+
+  base += densityBonus(totalPlaces);
+  base += incomeAdjustment(medianIncome);
+
+  // Soft clamp
+  let finalScore = Math.max(0, Math.min(100, Math.round(base)));
+
+  let category = "Under-invested";
+
+  if (finalScore >= 90) category = "Global Elite";
+  else if (finalScore >= 80) category = "Prime";
+  else if (finalScore >= 60) category = "Strong";
+  else if (finalScore >= 40) category = "Developing";
+  else if (finalScore >= 25) category = "Struggling";
+
+  return {
+    score: finalScore,
+    category
+  };
 }
 
 async function geocodeZip(zipcode) {
@@ -356,7 +362,7 @@ async function scoreZipcode(zipcode) {
   const medianIncome = getMedianHouseholdIncome(zipcode);
   const totalPlaces = seenPlaceIds.size;
   
-  const { score, category, isSuburbanLuxury } = normalizeScoreWithCategory(rawScore, medianIncome, totalPlaces);
+  const { score, category } = normalizeScoreWithCategory(rawScore, medianIncome, totalPlaces);
 
   return {
     zipcode,
@@ -365,23 +371,21 @@ async function scoreZipcode(zipcode) {
     score,
     category,
     medianIncome,
-    isSuburbanLuxury,
     rawScore: Math.round(rawScore * 100) / 100,
     growthScore: Math.round(adjustedGrowthScore * 100) / 100,
     riskScore: Math.round(riskScore * 100) / 100,
     hasAnchor,
     culturalPioneerScore: Math.round(culturalPioneerScore * 100) / 100,
     businessDensity: totalPlaces,
-    scoringMethod: "logarithmic-scaling-v2-with-income-adjustment",
     indicators: indicatorHits.sort((a, b) => Math.abs(b.score) - Math.abs(a.score)),
     drivers: indicatorHits
       .filter((item) => item.weight > 0)
       .sort((a, b) => b.score - a.score)
-      .map((item) => ({ label: item.label, count: item.count, score: item.score, tier: item.tier })),
+      .map((item) => ({ label: item.label, count: item.count, score: item.score })),
     risks: indicatorHits
       .filter((item) => item.weight < 0)
       .sort((a, b) => a.score - b.score)
-      .map((item) => ({ label: item.label, count: item.count, score: item.score, tier: item.tier }))
+      .map((item) => ({ label: item.label, count: item.count, score: item.score }))
   };
 }
 
