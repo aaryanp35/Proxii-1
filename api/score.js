@@ -35,8 +35,6 @@ function getMedianHouseholdIncome(zipcode) {
   return incomeByZipcode[zipcode] || null;
 }
 
-const mapsKey = process.env.MAPS_API_KEY;
-
 const weights = {
   // Tier 1: Premium positive indicators (highest impact)
   positive: [

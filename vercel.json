@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/score/:zipcode",
-      "destination": "/api/score.js"
+      "destination": "/api/score?zipcode=:zipcode"
     }
   ]
 }
