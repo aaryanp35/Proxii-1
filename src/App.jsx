@@ -14,9 +14,9 @@ function App() {
 
   const scoreValue = data?.score;
   const nationalStats = scoreValue ? getNationalStats(scoreValue) : null;
-  const gaugeLabel = !scoreValue ? null : scoreValue >= 70 ? 'High Growth' : scoreValue >= 40 ? 'Balanced Growth' : 'High Risk';
-  const gaugeClass = !scoreValue ? '' : scoreValue >= 70 ? 'text-emerald-400' : scoreValue >= 40 ? 'text-amber-400' : 'text-rose-400';
-  const gaugeTextClass = !scoreValue ? '' : scoreValue >= 70 ? 'text-emerald-500' : scoreValue >= 40 ? 'text-amber-500' : 'text-rose-500';
+  const gaugeLabel = !scoreValue ? null : scoreValue >= 65 ? 'High Growth' : scoreValue >= 35 ? 'Balanced Growth' : 'High Risk';
+  const gaugeClass = !scoreValue ? '' : scoreValue >= 65 ? 'text-emerald-400' : scoreValue >= 35 ? 'text-amber-400' : 'text-rose-400';
+  const gaugeTextClass = !scoreValue ? '' : scoreValue >= 65 ? 'text-emerald-500' : scoreValue >= 35 ? 'text-amber-500' : 'text-rose-500';
 
   const drivers = useMemo(() => data?.drivers ?? [], [data]);
   const risks = useMemo(() => data?.risks ?? [], [data]);

@@ -49,9 +49,9 @@ function isCacheValid(entry) {
 }
 
 function normalizeScoreWithCategory(rawScore) {
-  const baselineScore = 50; // True median
-  const scaleFactor = 250;  // Controls steepness (larger = wider spread)
-  const range = 50;         // Full 0-100 distribution
+  const baselineScore = 20; // Push poor areas to near 0
+  const scaleFactor = 250;  // Controls steepness
+  const range = 80;         // Wider spread from 0-100
   
   const tanhValue = Math.tanh(rawScore / scaleFactor);
   const normalized = baselineScore + range * tanhValue;
@@ -59,8 +59,8 @@ function normalizeScoreWithCategory(rawScore) {
   
   let category = 'Under-invested';
   if (finalScore >= 80) category = 'Elite';
-  else if (finalScore >= 60) category = 'Growth Potential';
-  else if (finalScore >= 40) category = 'Market Standard';
+  else if (finalScore >= 50) category = 'Growth Potential';
+  else if (finalScore >= 30) category = 'Market Standard';
   
   return { score: finalScore, category };
 }
