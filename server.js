@@ -100,13 +100,13 @@ function incomeAdjustment(medianIncome) {
 }
 
 function normalizeScoreWithCategory(rawScore, medianIncome, totalPlaces) {
-  let base = logisticNormalize(rawScore);
+  // Apply adjustments to raw score BEFORE normalization
+  let adjustedRawScore = rawScore;
+  adjustedRawScore += densityBonus(totalPlaces);
+  adjustedRawScore += incomeAdjustment(medianIncome);
 
-  base += densityBonus(totalPlaces);
-  base += incomeAdjustment(medianIncome);
-
-  // Soft clamp
-  let finalScore = Math.max(0, Math.min(100, Math.round(base)));
+  // Now normalize the adjusted score
+  let finalScore = Math.max(0, Math.min(100, Math.round(logisticNormalize(adjustedRawScore))));
 
   let category = "Under-invested";
 
