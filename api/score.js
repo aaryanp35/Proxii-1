@@ -78,7 +78,7 @@ function normalizeScoreWithCategory(rawScore) {
   // - rawScore ≈ 35+: Elite Growth (80-95+)
   
   const baselineScore = 20; // Push poor areas to near 0
-  const scaleFactor = 250;  // Controls steepness of logistic curve
+  const scaleFactor = 400;  // Controls steepness of logistic curve
   const range = 80;         // Wider spread from 0-100
   
   // Logistic normalization: baselineScore + range * tanh(rawScore / scaleFactor)
