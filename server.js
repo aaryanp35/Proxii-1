@@ -49,14 +49,18 @@ function isCacheValid(entry) {
 }
 
 function normalizeScoreWithCategory(rawScore) {
-  const scale = 25;
-  const v = Math.tanh(rawScore / scale);
-  const normalized = ((v + 1) / 2) * 100;
+  const baselineScore = 50; // True median
+  const scaleFactor = 250;  // Controls steepness (larger = wider spread)
+  const range = 50;         // Full 0-100 distribution
+  
+  const tanhValue = Math.tanh(rawScore / scaleFactor);
+  const normalized = baselineScore + range * tanhValue;
   const finalScore = Math.max(0, Math.min(100, Math.round(normalized)));
   
-  let category = 'Stable/Under-invested';
-  if (finalScore >= 80) category = 'Late Stage Gentrified';
-  else if (finalScore >= 50) category = 'High-Velocity Transition';
+  let category = 'Under-invested';
+  if (finalScore >= 80) category = 'Elite';
+  else if (finalScore >= 60) category = 'Growth Potential';
+  else if (finalScore >= 40) category = 'Market Standard';
   
   return { score: finalScore, category };
 }

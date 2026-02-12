@@ -77,9 +77,9 @@ function normalizeScoreWithCategory(rawScore) {
   // - rawScore ≈ 20-35: High Growth (60-80)
   // - rawScore ≈ 35+: Elite Growth (80-95+)
   
-  const baselineScore = 50; // Average urban zip
-  const scaleFactor = 18;   // Controls steepness of logistic curve
-  const range = 40;         // Maximum deviation from baseline
+  const baselineScore = 50; // True median
+  const scaleFactor = 250;  // Controls steepness of logistic curve (larger = wider spread)
+  const range = 50;         // Full 0-100 distribution
   
   // Logistic normalization: baselineScore + range * tanh(rawScore / scaleFactor)
   const tanhValue = Math.tanh(rawScore / scaleFactor);
@@ -87,10 +87,10 @@ function normalizeScoreWithCategory(rawScore) {
   const finalScore = Math.max(0, Math.min(100, Math.round(normalized)));
   
   // Categorize
-  let category = 'Developing';
-  if (finalScore >= 90) category = 'Elite Growth';
-  else if (finalScore >= 75) category = 'High Growth';
-  else if (finalScore >= 50) category = 'Market Standard';
+  let category = 'Under-invested';
+  if (finalScore >= 80) category = 'Elite Growth';
+  else if (finalScore >= 60) category = 'High Growth';
+  else if (finalScore >= 40) category = 'Market Standard';
   
   return { score: finalScore, category };
 }
