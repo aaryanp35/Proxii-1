@@ -101,20 +101,22 @@ function logisticNormalize(x, mid = 35, scale = 18) {
 }
 
 function densityBonus(totalPlaces) {
-  return Math.log1p(totalPlaces) * 6;
+  // Reduced multiplier from 6 to 2.5 to prevent score inflation
+  return Math.log1p(totalPlaces) * 2.5;
 }
 
 function incomeAdjustment(medianIncome) {
   if (!medianIncome) return 0;
 
-  if (medianIncome >= 250000) return 18;
-  if (medianIncome >= 200000) return 14;
-  if (medianIncome >= 150000) return 10;
-  if (medianIncome >= 100000) return 6;
-  if (medianIncome >= 70000) return 3;
-  if (medianIncome >= 45000) return -2;
+  // Capped at +10 max to prevent excessive bonuses
+  if (medianIncome >= 250000) return 10;
+  if (medianIncome >= 200000) return 8;
+  if (medianIncome >= 150000) return 6;
+  if (medianIncome >= 100000) return 4;
+  if (medianIncome >= 70000) return 2;
+  if (medianIncome >= 45000) return -1;
 
-  return -6;
+  return -4;
 }
 
 function normalizeScoreWithCategory(rawScore, medianIncome, totalPlaces) {
