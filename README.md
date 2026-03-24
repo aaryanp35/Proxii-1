@@ -1,53 +1,29 @@
-# Alt-Real Estate Value Index (Zip-Based)
+# Proxii Travel (Streamlit)
 
-An analytics engine that calculates neighborhood "Gentrification" and "Investment Potential" scores by analyzing Google Maps POIs within a specific Zip Code.
+Proxii Travel is a Python Streamlit app that scores destinations by neighborhood vibe using Google Maps Places signals and persona-based weighting.
 
-## Quick Start (Local Development)
+## Run Locally
 
 1. Install dependencies:
 
 ```bash
-npm install
-cd proxii-frontend && npm install && cd ..
+python3 -m pip install -r requirements_streamlit.txt
 ```
 
-2. Set up environment variables:
+2. Set your Google Maps API key:
 
 ```bash
 export MAPS_API_KEY=your_google_maps_api_key
 ```
 
-3. Start the backend:
+3. Start the app:
 
 ```bash
-npm start
+streamlit run proxii_travel/app.py
 ```
 
-4. Start the frontend (in a new terminal):
+## Included Files
 
-```bash
-cd proxii-frontend && npm run dev
-```
-
-5. Open http://localhost:5174/ in your browser
-
-## Deployment
-
-See [DEPLOY.md](DEPLOY.md) for Vercel deployment instructions.
-
-## API Endpoints
-
-- `GET /api/score/:zipcode` - Returns gentrification score and indicators
-- `GET /health` - Health check
-
-## Tech Stack
-
-- **Backend**: Node.js + Express (converted to Vercel serverless for production)
-- **Frontend**: React + Vite + Tailwind CSS
-- **APIs**: Google Maps Geocoding + Places
-
-## Notes
-
-- The app uses a simple JSON cache at `cache.json` to avoid repeated API calls in local development
-- Adjust scoring weights in `server.js` (local) or `api/score.js` (production)
-- Cache is disabled in production (Vercel serverless functions are stateless)
+- `proxii_travel/app.py`: Main Streamlit application
+- `requirements_streamlit.txt`: Python dependencies
+- `.env.example`: Environment variable template
