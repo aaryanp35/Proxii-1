@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git checkout *)",
+      "Bash(git pull *)",
+      "Bash(git cherry-pick *)",
+      "Bash(git reset *)",
+      "Bash(gh pr create --base main --head dev --title 'Fix Vercel deployment + expand careers with 5 new job postings' --body ' *)",
+      "Bash(gh auth *)",
+      "Bash(gh pr edit 2 --title 'Fix Vercel deployment + expand careers with 5 new job postings' --body ' *)"
+    ]
+  }
+}
