@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link, useParams, Navigate, useNavigate } from 'react-router-dom'
+import { Link, useParams, Navigate } from 'react-router-dom'
 import { jobs } from '../data/jobs'
 
 function Section({ title, items, color = 'emerald' }) {

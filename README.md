@@ -1,53 +1,100 @@
-# Alt-Real Estate Value Index (Zip-Based)
+# Proxii-1
 
-An analytics engine that calculates neighborhood "Gentrification" and "Investment Potential" scores by analyzing Google Maps POIs within a specific Zip Code.
+Proxii is a React + Node app for neighborhood scoring and hiring workflows.
 
-## Quick Start (Local Development)
+- **Market scoring**: `GET /api/score/:zipcode`
+- **Careers + applications**: careers pages in the frontend, application save endpoint at `POST /api/apply`
+
+## Tech stack
+
+- **Frontend**: React 19, Vite, React Router
+- **Backend/API**: Node/Express (`server.js`) and Vercel-style serverless handlers (`api/*.js`)
+- **Data**: Supabase (applications + score/cache tables)
+- **External APIs**: Google Geocoding + Places APIs
+- **Tests**: Vitest + Testing Library
+
+## Repository layout
+
+```text
+Proxii-1/
+├── api/                      # Serverless handlers (score/apply)
+├── src/                      # Frontend app
+│   ├── pages/                # Route pages
+│   ├── components/           # Shared UI components
+│   ├── data/                 # Static data (jobs)
+│   └── __tests__/            # Frontend/API tests
+├── ml/                       # ML score blending helpers
+├── supabase/migrations/      # DB schema migrations
+├── server.js                 # Local Express API server
+├── .env.example              # Required env vars
+└── README.md
+```
+
+## Prerequisites
+
+- Node.js 20+
+- npm 10+
+- Google Maps API key
+- Supabase project (if using apply endpoint and cache tables)
+
+## Local setup
 
 1. Install dependencies:
 
 ```bash
 npm install
-cd proxii-frontend && npm install && cd ..
 ```
 
-2. Set up environment variables:
+2. Create your environment file:
 
 ```bash
-export MAPS_API_KEY=your_google_maps_api_key
+cp .env.example .env
 ```
 
-3. Start the backend:
+3. Fill `.env` values (see `.env.example` for all required keys).
+
+4. Start backend API server:
 
 ```bash
-npm start
+npm run dev:server
 ```
 
-4. Start the frontend (in a new terminal):
+5. In a second terminal, start frontend:
 
 ```bash
-cd proxii-frontend && npm run dev
+npm run dev
 ```
 
-5. Open http://localhost:5174/ in your browser
+6. Open the Vite URL shown in terminal (normally `http://localhost:5173`).
 
-## Deployment
+## NPM scripts
 
-See [DEPLOY.md](DEPLOY.md) for Vercel deployment instructions.
+- `npm run dev` - start Vite frontend
+- `npm run dev:server` - start local Node API server
+- `npm run dev:all` - run server + frontend together
+- `npm run build` - production build
+- `npm run preview` - preview production build
+- `npm run test` - run test suite once
+- `npm run test:watch` - run tests in watch mode
 
-## API Endpoints
+## Environment variables
 
-- `GET /api/score/:zipcode` - Returns gentrification score and indicators
-- `GET /health` - Health check
+See `.env.example` for the latest list. Main ones:
 
-## Tech Stack
+- `MAPS_API_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `PROXIMITY_THRESHOLD_METERS`
 
-- **Backend**: Node.js + Express (converted to Vercel serverless for production)
-- **Frontend**: React + Vite + Tailwind CSS
-- **APIs**: Google Maps Geocoding + Places
+## Documentation for new developers
+
+- [DEPLOY.md](./DEPLOY.md) - deployment notes
+- [SCORING_REFACTOR.md](./SCORING_REFACTOR.md) - scoring model refactor context
+- [docs/ONBOARDING.md](./docs/ONBOARDING.md) - practical onboarding guide
 
 ## Notes
 
-- The app uses a simple JSON cache at `cache.json` to avoid repeated API calls in local development
-- Adjust scoring weights in `server.js` (local) or `api/score.js` (production)
-- Cache is disabled in production (Vercel serverless functions are stateless)
+- Current tests include pre-existing failures in `src/__tests__/CareersPage.test.jsx` unrelated to this documentation/cleanup task.
+- Build currently succeeds on the main branch.
