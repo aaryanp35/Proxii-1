@@ -1,5 +1,6 @@
 
 import axios from "axios";
+import { predictScore, ML_BLEND } from "../ml/modelWeights.js";
 
 // Simple in-memory cache (expires after 10 min)
 const cache = {};
@@ -362,14 +363,34 @@ async function scoreZipcode(zipcode) {
   const medianIncome = getMedianHouseholdIncome(zipcode);
   const totalPlaces = seenPlaceIds.size;
   
-  const { score, category } = normalizeScoreWithCategory(rawScore, medianIncome, totalPlaces);
+  const { score: ruleScore } = normalizeScoreWithCategory(rawScore, medianIncome, totalPlaces);
+
+  // ML scoring: Ridge Regression on indicator category counts.
+  // driversCount/risksCount = how many distinct positive/negative categories fired.
+  const driversCount = indicatorHits.filter((i) => i.weight > 0).length;
+  const risksCount = indicatorHits.filter((i) => i.weight < 0).length;
+  const mlScore = predictScore(driversCount, risksCount);
+
+  // Blend: ML corrects the rule-based score without overriding it.
+  // ML_BLEND starts at 0.4 and should increase as training data grows.
+  const blendedScore = Math.max(0, Math.min(100, Math.round(ML_BLEND * mlScore + (1 - ML_BLEND) * ruleScore)));
+
+  // Re-derive category from the blended score so labels stay consistent.
+  let category = "Under-invested";
+  if (blendedScore >= 90) category = "Global Elite";
+  else if (blendedScore >= 80) category = "Prime";
+  else if (blendedScore >= 60) category = "Strong";
+  else if (blendedScore >= 40) category = "Developing";
+  else if (blendedScore >= 25) category = "Struggling";
 
   return {
     zipcode,
     areaName: geocoded.areaName,
     center,
-    score,
+    score: blendedScore,
     category,
+    mlScore,
+    ruleScore,
     medianIncome,
     rawScore: Math.round(rawScore * 100) / 100,
     growthScore: Math.round(adjustedGrowthScore * 100) / 100,

@@ -1,4 +1,5 @@
 {
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/api/score/:zipcode",
@@ -7,6 +8,10 @@
     {
       "source": "/api/apply",
       "destination": "/api/apply"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ]
 }
