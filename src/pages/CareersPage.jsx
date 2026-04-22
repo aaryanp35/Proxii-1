@@ -90,6 +90,9 @@ export function CareersPage() {
   const [dept, setDept] = useState('All')
   const [location, setLocation] = useState('All')
   const [type, setType] = useState('All')
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  const activeFilterCount = [dept, location, type].filter(v => v !== 'All').length + (search ? 1 : 0)
 
   const filtered = useMemo(() => {
     return jobs.filter(j => {
@@ -155,9 +158,38 @@ export function CareersPage() {
 
       {/* Content */}
       <div className="flex-1 max-w-6xl mx-auto w-full px-6 md:px-12 py-12">
+        {/* Mobile filter toggle */}
+        <div className="md:hidden mb-4 flex items-center gap-3">
+          <button
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 shadow-sm hover:border-[#2D8E6F]/30 transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+            </svg>
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="w-5 h-5 bg-[#2D8E6F] text-white text-[10px] font-black rounded-full flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+            <svg className={`w-4 h-4 text-slate-400 transition-transform ${filtersOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {activeFilterCount > 0 && (
+            <button
+              onClick={() => { setDept('All'); setLocation('All'); setType('All'); setSearch('') }}
+              className="text-xs font-bold text-slate-400 hover:text-rose-500 transition-colors"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
+
         <div className="flex flex-col md:flex-row gap-10">
           {/* Sidebar filters */}
-          <aside className="md:w-56 flex-shrink-0">
+          <aside className={`md:w-56 flex-shrink-0 ${filtersOpen ? 'block' : 'hidden'} md:block`}>
             <div className="sticky top-24 space-y-8">
               {/* Search */}
               <div className="relative">
@@ -242,7 +274,7 @@ export function CareersPage() {
       </div>
 
       {/* Footer */}
-      <footer className="py-8 px-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+      <footer className="py-8 px-6 md:px-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-xs font-bold text-slate-400 tracking-wider uppercase">&copy; 2026 Proxii Analytics</p>
         <div className="flex gap-8">
           <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Privacy Policy</a>

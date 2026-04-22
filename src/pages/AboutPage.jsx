@@ -1,24 +1,50 @@
-import React from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 export function AboutPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
       {/* Nav */}
-      <nav className="glass-nav sticky top-0 z-50 w-full py-3 px-6 md:py-4 md:px-12 flex justify-between items-center">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#2D8E6F] rounded-xl flex items-center justify-center shadow-lg shadow-[#2D8E6F]/25">
-            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M5 3a2 2 0 012-2h6a2 2 0 012 2v2h4a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2h4V3z" />
-            </svg>
+      <nav className="glass-nav sticky top-0 z-50 w-full">
+        <div className="py-3 px-6 md:py-4 md:px-12 flex justify-between items-center">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#2D8E6F] rounded-xl flex items-center justify-center shadow-lg shadow-[#2D8E6F]/25">
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M5 3a2 2 0 012-2h6a2 2 0 012 2v2h4a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2h4V3z" />
+              </svg>
+            </div>
+            <span className="text-2xl font-bold tracking-tight text-slate-900">Proxii</span>
+          </Link>
+          <div className="hidden sm:flex items-center gap-8">
+            <Link to="/" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Dashboard</Link>
+            <span className="text-sm text-[#2D8E6F] font-bold">About</span>
+            <Link to="/careers" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Careers</Link>
           </div>
-          <span className="text-2xl font-bold tracking-tight text-slate-900">Proxii</span>
-        </Link>
-        <div className="flex items-center gap-8">
-          <Link to="/" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Dashboard</Link>
-          <span className="text-sm text-[#2D8E6F] font-bold">About</span>
-          <Link to="/careers" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Careers</Link>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="sm:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
+            aria-label="Toggle navigation menu"
+          >
+            {mobileMenuOpen ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
         </div>
+        {mobileMenuOpen && (
+          <div className="sm:hidden border-t border-slate-100 px-6 py-4 flex flex-col gap-1">
+            <Link to="/" className="py-2.5 text-sm text-slate-500 font-medium">Dashboard</Link>
+            <span className="py-2.5 text-sm text-[#2D8E6F] font-bold border-t border-slate-50">About</span>
+            <Link to="/careers" onClick={() => setMobileMenuOpen(false)} className="py-2.5 text-sm text-slate-500 font-medium border-t border-slate-50">Careers</Link>
+          </div>
+        )}
       </nav>
 
       <main className="flex-1 w-full max-w-5xl mx-auto px-6 md:px-12 py-20">
@@ -28,9 +54,9 @@ export function AboutPage() {
           <span className="inline-block px-4 py-1.5 bg-[#2D8E6F]/10 text-[#2D8E6F] text-[10px] font-black uppercase tracking-widest rounded-full mb-6">
             Our Mission
           </span>
-          <h1 className="text-5xl md:text-6xl font-bold text-slate-900 tracking-tight mb-6">
-            Neighborhood intelligence,<br />
-            <span className="text-[#2D8E6F]">quantified.</span>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-900 tracking-tight mb-6">
+            Neighborhood intelligence,<br className="hidden sm:block" />
+            <span className="text-[#2D8E6F]"> quantified.</span>
           </h1>
           <p className="text-lg text-slate-500 leading-relaxed max-w-2xl mx-auto">
             Proxii turns real-world signals — the coffee shops, yoga studios, and lending predators in your neighborhood — into a single, actionable market index. Built for investors, analysts, and anyone who wants to know where growth is actually happening.
@@ -126,7 +152,7 @@ export function AboutPage() {
         </section>
       </main>
 
-      <footer className="py-10 px-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
+      <footer className="py-10 px-6 md:px-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
         <p className="text-xs font-bold text-slate-400 tracking-wider uppercase">&copy; 2026 Proxii Analytics — Built for Fintech</p>
         <div className="flex gap-10">
           <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Privacy Policy</a>
