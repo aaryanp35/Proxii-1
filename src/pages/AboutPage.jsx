@@ -155,8 +155,8 @@ export function AboutPage() {
       <footer className="py-10 px-6 md:px-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
         <p className="text-xs font-bold text-slate-400 tracking-wider uppercase">&copy; 2026 Proxii Analytics — Built for Fintech</p>
         <div className="flex gap-10">
-          <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Privacy Policy</a>
-          <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Market Terms</a>
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Privacy Policy</span>
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Market Terms</span>
         </div>
       </footer>
     </div>

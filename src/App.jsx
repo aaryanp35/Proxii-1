@@ -147,8 +147,8 @@ function App() {
           {/* Right: desktop nav links + avatar + mobile hamburger */}
           <div className="flex items-center gap-4 md:gap-8">
             <div className="hidden md:flex items-center gap-8">
-              <a href="#" className="text-sm text-[#2D8E6F] font-bold">Dashboard</a>
-              <a href="#" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Market Intel</a>
+              <span className="text-sm text-[#2D8E6F] font-bold">Dashboard</span>
+              <span className="text-sm text-slate-500 font-medium">Market Intel</span>
               <Link to="/about" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">About</Link>
               <Link to="/careers" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Careers</Link>
             </div>
@@ -239,8 +239,8 @@ function App() {
             </div>
             {/* Nav links */}
             <div className="flex flex-col gap-1">
-              <a href="#" className="py-2.5 text-sm font-bold text-[#2D8E6F]">Dashboard</a>
-              <a href="#" className="py-2.5 text-sm text-slate-500 font-medium border-t border-slate-50">Market Intel</a>
+              <span className="py-2.5 text-sm font-bold text-[#2D8E6F]">Dashboard</span>
+              <span className="py-2.5 text-sm text-slate-500 font-medium border-t border-slate-50">Market Intel</span>
               <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="py-2.5 text-sm text-slate-500 font-medium border-t border-slate-50">About</Link>
               <Link to="/careers" onClick={() => setMobileMenuOpen(false)} className="py-2.5 text-sm text-slate-500 font-medium border-t border-slate-50">Careers</Link>
             </div>
@@ -475,8 +475,8 @@ function App() {
       <footer className="intro-footer py-10 px-6 md:px-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 reveal-node" style={{ animationDelay: '0.5s' }}>
         <p className="text-xs font-bold text-slate-400 tracking-wider uppercase">&copy; 2026 Proxii Analytics — Built for Fintech</p>
         <div className="flex gap-10">
-          <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Privacy Policy</a>
-          <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Market Terms</a>
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Privacy Policy</span>
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Market Terms</span>
         </div>
       </footer>
     </div>

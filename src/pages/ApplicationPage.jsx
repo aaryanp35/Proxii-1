@@ -517,8 +517,8 @@ export function ApplicationPage() {
       <footer className="py-8 px-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-xs font-bold text-slate-400 tracking-wider uppercase">&copy; 2026 Proxii Analytics</p>
         <div className="flex gap-8">
-          <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Privacy Policy</a>
-          <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Market Terms</a>
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Privacy Policy</span>
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Market Terms</span>
         </div>
       </footer>
     </div>
