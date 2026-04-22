@@ -7,6 +7,7 @@ import App from './App.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <App />
     </BrowserRouter>
   </StrictMode>,
