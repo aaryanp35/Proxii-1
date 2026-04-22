@@ -3,7 +3,7 @@ export const jobs = [
     id: 'swe-intern-2026',
     title: 'Software Development Intern',
     department: 'Engineering',
-    location: 'Remote',
+    location: '711 Bay St, Toronto, ON M5G 1Y8',
     type: 'Internship',
     duration: '4 months',
     postedDate: '2026-04-15',
