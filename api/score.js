@@ -1,11 +1,16 @@
 
 import axios from "axios";
+import { createClient } from "@supabase/supabase-js";
 
-// Simple in-memory cache (expires after 10 min)
-const cache = {};
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const mapsKey = process.env.MAPS_API_KEY;
+
+const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+const PROXIMITY_THRESHOLD_METERS = Number(process.env.PROXIMITY_THRESHOLD_METERS) || 1500;
 
 // Median Household Income by Zipcode (expanded dataset)
 // Data source: Census estimates and public market research
@@ -389,40 +394,123 @@ async function scoreZipcode(zipcode) {
   };
 }
 
+// ================= SUPABASE CACHE LAYER =====================
+
+async function findExactCacheHit(zipcode) {
+  const { data, error } = await supabase
+    .from("zip_scores")
+    .select("full_payload")
+    .eq("zipcode", zipcode)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+  if (error) { console.error("findExactCacheHit:", error); return null; }
+  return data ? data.full_payload : null;
+}
+
+async function findProximityCacheHit(lat, lng, thresholdM) {
+  const latDelta = thresholdM / 111320;
+  const lngDelta = thresholdM / (111320 * Math.cos(lat * Math.PI / 180));
+  const { data, error } = await supabase
+    .from("zip_scores")
+    .select("zipcode, center_lat, center_lng, full_payload")
+    .gt("expires_at", new Date().toISOString())
+    .gte("center_lat", lat - latDelta).lte("center_lat", lat + latDelta)
+    .gte("center_lng", lng - lngDelta).lte("center_lng", lng + lngDelta);
+  if (error || !data?.length) return null;
+  let best = null, bestDist = Infinity;
+  for (const row of data) {
+    const dist = haversineDistance(lat, lng, row.center_lat, row.center_lng);
+    if (dist < thresholdM && dist < bestDist) {
+      bestDist = dist;
+      best = { payload: row.full_payload, distance_m: dist, resolved_zip: row.zipcode };
+    }
+  }
+  return best;
+}
+
+async function storeCachedScore(data) {
+  const expiresAt = new Date(Date.now() + CACHE_TTL_MS).toISOString();
+  const { data: inserted, error } = await supabase
+    .from("zip_scores")
+    .upsert({
+      zipcode: data.zipcode, area_name: data.areaName,
+      center_lat: data.center.lat, center_lng: data.center.lng,
+      score: data.score, category: data.category,
+      raw_score: data.rawScore, growth_score: data.growthScore,
+      risk_score: data.riskScore, business_density: data.businessDensity,
+      median_income: data.medianIncome, has_anchor: data.hasAnchor,
+      full_payload: data, expires_at: expiresAt
+    }, { onConflict: "zipcode" })
+    .select("id").single();
+  if (error || !inserted) { console.error("storeCachedScore:", error); return; }
+  const labels = (data.indicators || []).map(i => i.label);
+  if (!labels.length) return;
+  const { data: indRows } = await supabase.from("indicators").select("id, label").in("label", labels);
+  if (!indRows) return;
+  const labelToId = Object.fromEntries(indRows.map(r => [r.label, r.id]));
+  const rows = data.indicators
+    .filter(h => labelToId[h.label])
+    .map(h => ({ zip_score_id: inserted.id, indicator_id: labelToId[h.label], hit_count: h.count, hit_score: h.score }));
+  if (rows.length) {
+    await supabase.from("zip_indicator_hits").upsert(rows, { onConflict: "zip_score_id,indicator_id" });
+  }
+}
+
+function logRequest({ requested_zip, resolved_zip = null, cache_type, distance_m = null, model_called = false, response_ms }) {
+  supabase.from("score_request_logs")
+    .insert({ requested_zip, resolved_zip, cache_type, distance_m, model_called, response_ms })
+    .then(({ error }) => { if (error) console.error("logRequest:", error); });
+}
+
+// ================= HANDLER =====================
+
 export default async (req, res) => {
-  // Enable CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
 
-  const zipcode = String(req.query.zipcode || "").trim();
+  const zipcode = String(req.query.zipcode || "").trim().toUpperCase();
+  const t0 = Date.now();
 
-  if (!mapsKey) {
-    return res.status(500).json({ error: "Maps API key not configured." });
-  }
+  if (!mapsKey) return res.status(500).json({ error: "Maps API key not configured." });
 
-  // Supports: US (5-digit), Canada (A1A 1A1), and European formats
   const postalCodeRegex = /^([0-9]{5}|[A-Z]\d[A-Z]\s?\d[A-Z]\d|[0-9]{4,6}|[A-Z]{1,2}\d{1,2}[A-Z\d]?\s?\d[A-Z]{2})$/;
-  if (!postalCodeRegex.test(zipcode.trim())) {
+  if (!postalCodeRegex.test(zipcode)) {
     return res.status(400).json({ error: "Invalid postal code format. Supports US, Canada, and Europe." });
   }
 
   try {
-    // Check cache first
-    const now = Date.now();
-    if (cache[zipcode] && (now - cache[zipcode].ts < CACHE_TTL)) {
-      return res.status(200).json({ ...cache[zipcode].data, cached: true });
+    // 1. Exact cache hit
+    const exact = await findExactCacheHit(zipcode);
+    if (exact) {
+      logRequest({ requested_zip: zipcode, resolved_zip: zipcode, cache_type: "exact", response_ms: Date.now() - t0 });
+      return res.status(200).json({ ...exact, cached: true, cache_type: "exact" });
     }
+
+    // 2. Geocode (needed for proximity check and full miss)
+    const geo = await geocodeZip(zipcode);
+
+    // 3. Proximity cache hit
+    const prox = await findProximityCacheHit(geo.lat, geo.lng, PROXIMITY_THRESHOLD_METERS);
+    if (prox) {
+      logRequest({ requested_zip: zipcode, resolved_zip: prox.resolved_zip, cache_type: "proximity",
+                   distance_m: prox.distance_m, response_ms: Date.now() - t0 });
+      return res.status(200).json({ ...prox.payload, cached: true, cache_type: "proximity",
+                                    resolved_from: prox.resolved_zip, distance_m: Math.round(prox.distance_m) });
+    }
+
+    // 4. Full miss — run scoring model
     const data = await scoreZipcode(zipcode);
-    cache[zipcode] = { data, ts: now };
-    return res.status(200).json({ ...data, cached: false });
+    storeCachedScore(data);
+    logRequest({ requested_zip: zipcode, resolved_zip: zipcode, cache_type: "miss",
+                 model_called: true, response_ms: Date.now() - t0 });
+    return res.status(200).json({ ...data, cached: false, cache_type: "miss" });
+
   } catch (error) {
     console.error("Score API error:", error.message, error.response?.data);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: error.message || "Unable to score zip code.",
       details: error.response?.data?.error_message || error.response?.data?.status
     });
