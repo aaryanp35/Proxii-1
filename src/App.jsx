@@ -1,8 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import { getNationalStats } from './utils/percentile';
 import { NationalPercentileHover } from './components/NationalPercentileHover';
 import { FactorHover } from './components/FactorHover';
+import { CareersPage } from './pages/CareersPage';
+import { JobDetailPage } from './pages/JobDetailPage';
+import { ApplicationPage } from './pages/ApplicationPage';
 
 function App() {
   const [toggleState, setToggleState] = useState('live');
@@ -62,7 +66,7 @@ function App() {
     setToggleState(mode);
   };
 
-  return (
+  const home = (
     <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
       {/* Navigation */}
       <nav className="intro-nav glass-nav sticky top-0 z-50 w-full py-3 px-6 md:py-4 md:px-12 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0">
@@ -138,6 +142,7 @@ function App() {
           <div className="hidden md:flex items-center gap-8">
             <a href="#" className="text-sm text-[#2D8E6F] font-bold">Dashboard</a>
             <a href="#" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Market Intel</a>
+            <Link to="/careers" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Careers</Link>
           </div>
           <div className="w-10 h-10 rounded-2xl border-2 border-white shadow-md bg-gradient-to-br from-[#2D8E6F] to-[#45B08C] relative">
             <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-white"></div>
@@ -370,13 +375,22 @@ function App() {
 
       {/* Footer */}
       <footer className="intro-footer py-10 px-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 reveal-node" style={{ animationDelay: '0.5s' }}>
-        <p className="text-xs font-bold text-slate-400 tracking-wider uppercase">&copy; 2024 Proxii Analytics — Built for Fintech</p>
+        <p className="text-xs font-bold text-slate-400 tracking-wider uppercase">&copy; 2026 Proxii Analytics — Built for Fintech</p>
         <div className="flex gap-10">
           <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Privacy Policy</a>
           <a href="#" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Market Terms</a>
         </div>
       </footer>
     </div>
+  );
+
+  return (
+    <Routes>
+      <Route path="/" element={home} />
+      <Route path="/careers" element={<CareersPage />} />
+      <Route path="/careers/:id" element={<JobDetailPage />} />
+      <Route path="/careers/:id/apply" element={<ApplicationPage />} />
+    </Routes>
   );
 }
 
