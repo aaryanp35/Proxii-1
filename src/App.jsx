@@ -7,6 +7,7 @@ import { FactorHover } from './components/FactorHover';
 import { CareersPage } from './pages/CareersPage';
 import { JobDetailPage } from './pages/JobDetailPage';
 import { ApplicationPage } from './pages/ApplicationPage';
+import { AboutPage } from './pages/AboutPage';
 
 function App() {
   const [toggleState, setToggleState] = useState('live');
@@ -142,6 +143,7 @@ function App() {
           <div className="hidden md:flex items-center gap-8">
             <a href="#" className="text-sm text-[#2D8E6F] font-bold">Dashboard</a>
             <a href="#" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Market Intel</a>
+            <Link to="/about" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">About</Link>
             <Link to="/careers" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Careers</Link>
           </div>
           <div className="w-10 h-10 rounded-2xl border-2 border-white shadow-md bg-gradient-to-br from-[#2D8E6F] to-[#45B08C] relative">
@@ -387,6 +389,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={home} />
+      <Route path="/about" element={<AboutPage />} />
       <Route path="/careers" element={<CareersPage />} />
       <Route path="/careers/:id" element={<JobDetailPage />} />
       <Route path="/careers/:id/apply" element={<ApplicationPage />} />
