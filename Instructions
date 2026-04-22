@@ -1,0 +1,36 @@
+Instructions:
+# Project: Alt-Real Estate Value Index (Zip-Based)
+
+## 1. Purpose
+An analytics engine that calculates neighborhood "Gentrification" and "Investment Potential" scores by scraping Google Maps POIs within a specific Zip Code.
+
+API Key MAPS: AIzaSyCQ2L7zn1uJB4-qF2ceWJv5i9K2FWmr6vk
+## 2. Core Logic (The "Brain")
+- **Input:** 5-digit US Zip Code.
+- **Process:**
+    1. Geocode Zip Code to Lat/Lng coordinates.
+    2. Scan a 3000m radius via Google Places API.
+    3. Categorize establishments into "Growth Drivers" and "Risk Factors."
+- **Weighting System:**
+    - **Positive (+):** Specialty Coffee, Whole Foods/Organic Grocers, Pilates/Yoga, Boutique Gyms, Wine Bars.
+    - **Negative (-):** Payday Loans, Pawn Shops, Fast Food Chains, Industrial Zones.
+- **Output:** A normalized "Neighborhood Score" (0-100).
+
+## 3. Technology Stack
+- **Backend:** Node.js with Express.
+- **APIs:** Google Maps (Geocoding + Places).
+- **Frontend Framework:** React + Tailwind CSS.
+- **UI Design:** Managed via SuperDesign.dev (Internal IDE Design Agent).
+
+## 4. Coding Instructions for Copilot
+- Use `axios` for API calls.
+- Implement a caching layer (simple JSON or Redis) to avoid redundant API hits per Zip Code.
+- Ensure the scoring algorithm is modular so weights can be adjusted easily.
+- Create a clean API endpoint: `GET /api/score/:zipcode`.
+
+## 5. UI Requirements (For SuperDesign Integration)
+- The UI will be designed visually using SuperDesign.dev.
+- The logic must provide a JSON response compatible with a "Dashboard" view featuring:
+    - A Score Circular Progress Bar.
+    - A list of "Top Growth Indicators" found.
+    - A Map View centered on the Zip Code.

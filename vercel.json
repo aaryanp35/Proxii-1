@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/score/:zipcode",
+      "destination": "/api/score?zipcode=:zipcode"
+    },
+    {
+      "source": "/api/apply",
+      "destination": "/api/apply"
+    }
+  ]
+}

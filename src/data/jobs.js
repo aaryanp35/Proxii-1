@@ -1,0 +1,35 @@
+export const jobs = [
+  {
+    id: 'swe-intern-2026',
+    title: 'Software Development Intern',
+    department: 'Engineering',
+    location: 'Remote',
+    type: 'Internship',
+    duration: '4 months',
+    postedDate: '2026-04-15',
+    about: `We're looking for a driven Software Development Intern to join Proxii's core engineering team for a 4-month term. You'll work hands-on across our backend, data pipelines, and AI-powered scoring systems that help investors analyse neighbourhood growth at scale. Expect real ownership, real code reviews, and work that ships.`,
+    responsibilities: [
+      'Build and maintain RESTful APIs using Node.js and Express',
+      'Design, query, and optimise SQL databases (PostgreSQL)',
+      'Implement and iterate on ML/AI features for market scoring and classification',
+      'Write clean, well-tested code and contribute to engineering documentation',
+      'Participate in code reviews, architecture discussions, and sprint planning',
+      'Debug production issues and improve observability across services',
+    ],
+    requirements: [
+      'Currently enrolled in or recently completed a CS, Software Engineering, or related degree',
+      'Solid proficiency in JavaScript/TypeScript — Node.js backend experience preferred',
+      'Strong understanding of SQL and relational database design (PostgreSQL or similar)',
+      'Exposure to machine learning, AI tooling, or competitive programming (Codeforces, LeetCode)',
+      'Comfortable with Git, pull requests, and collaborative development workflows',
+      'Self-directed and able to operate in a fast-moving, ambiguous environment',
+    ],
+    niceToHave: [
+      'Experience with React or other modern frontend frameworks',
+      'Familiarity with cloud platforms (Vercel, AWS, GCP)',
+      'Competitive programming background or strong algorithmic problem-solving skills',
+      'Prior internship, research, or project experience with real-world APIs or data pipelines',
+      'Knowledge of vector databases, embeddings, or LLM-based tooling',
+    ],
+  },
+]
