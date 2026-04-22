@@ -1,6 +1,7 @@
 
 import axios from "axios"
 import { createClient } from "@supabase/supabase-js"
+import { predictScore, ML_BLEND } from "../ml/modelWeights.js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -338,21 +339,51 @@ async function scoreZipcode(zipcode) {
     }
   }
 
-  const anchorMultiplier    = hasAnchor ? 1.2 : 1.0
-  const adjustedGrowthScore = growthScore * anchorMultiplier + culturalPioneerScore
-  const penalizedScore      = adjustedGrowthScore + riskScore * 1.3
-  const rawScore            = Math.max(-50, penalizedScore)
+  // Apply anchor multiplier if present
+  const anchorMultiplier = hasAnchor ? 1.2 : 1.0;
+  const adjustedGrowthScore = growthScore * anchorMultiplier + culturalPioneerScore;
 
-  const medianIncome = getMedianHouseholdIncome(zipcode)
-  const totalPlaces  = allPlaceIds.size
-  const { score, category } = normalizeScoreWithCategory(rawScore, medianIncome, totalPlaces)
+  // REFACTORED: Hard penalties for risk factors
+  // Risk factors (negative scores) now apply as hard penalties with 1.3x multiplier
+  // This ensures a single major risk factor significantly impacts the final score
+  const hardPenaltyMultiplier = 1.3;
+  const penalizedScore = adjustedGrowthScore + (riskScore * hardPenaltyMultiplier);
+  
+  // Combined score with penalty floor to prevent unbounded negatives
+  const rawScore = Math.max(-50, penalizedScore);
+
+  // Income adjustment layer
+  const medianIncome = getMedianHouseholdIncome(zipcode);
+  const totalPlaces = seenPlaceIds.size;
+  
+  const { score: ruleScore } = normalizeScoreWithCategory(rawScore, medianIncome, totalPlaces);
+
+  // ML scoring: Ridge Regression on indicator category counts.
+  // driversCount/risksCount = how many distinct positive/negative categories fired.
+  const driversCount = indicatorHits.filter((i) => i.weight > 0).length;
+  const risksCount = indicatorHits.filter((i) => i.weight < 0).length;
+  const mlScore = predictScore(driversCount, risksCount);
+
+  // Blend: ML corrects the rule-based score without overriding it.
+  // ML_BLEND starts at 0.4 and should increase as training data grows.
+  const blendedScore = Math.max(0, Math.min(100, Math.round(ML_BLEND * mlScore + (1 - ML_BLEND) * ruleScore)));
+
+  // Re-derive category from the blended score so labels stay consistent.
+  let category = "Under-invested";
+  if (blendedScore >= 90) category = "Global Elite";
+  else if (blendedScore >= 80) category = "Prime";
+  else if (blendedScore >= 60) category = "Strong";
+  else if (blendedScore >= 40) category = "Developing";
+  else if (blendedScore >= 25) category = "Struggling";
 
   return {
     zipcode,
     areaName: geocoded.areaName,
     center,
-    score,
+    score: blendedScore,
     category,
+    mlScore,
+    ruleScore,
     medianIncome,
     rawScore:            Math.round(rawScore * 100) / 100,
     growthScore:         Math.round(adjustedGrowthScore * 100) / 100,
