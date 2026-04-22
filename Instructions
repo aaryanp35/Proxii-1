@@ -4,7 +4,7 @@ Instructions:
 ## 1. Purpose
 An analytics engine that calculates neighborhood "Gentrification" and "Investment Potential" scores by scraping Google Maps POIs within a specific Zip Code.
 
-API Key MAPS: AIzaSyCQ2L7zn1uJB4-qF2ceWJv5i9K2FWmr6vk
+API Key MAPS: set via environment variable (`MAPS_API_KEY`) and never commit it to source
 ## 2. Core Logic (The "Brain")
 - **Input:** 5-digit US Zip Code.
 - **Process:**

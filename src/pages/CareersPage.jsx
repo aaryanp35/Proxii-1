@@ -5,6 +5,7 @@ import { jobs } from '../data/jobs'
 const DEPARTMENTS = ['All', ...new Set(jobs.map(j => j.department))]
 const LOCATIONS = ['All', ...new Set(jobs.map(j => j.location))]
 const TYPES = ['All', ...new Set(jobs.map(j => j.type))]
+const ALL_FILTER = 'All'
 
 function FilterChip({ label, active, onClick }) {
   return (
@@ -87,22 +88,30 @@ function JobCard({ job }) {
 
 export function CareersPage() {
   const [search, setSearch] = useState('')
-  const [dept, setDept] = useState('All')
-  const [location, setLocation] = useState('All')
-  const [type, setType] = useState('All')
+  const [dept, setDept] = useState(ALL_FILTER)
+  const [location, setLocation] = useState(ALL_FILTER)
+  const [type, setType] = useState(ALL_FILTER)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const normalizedSearch = search.trim().toLowerCase()
 
-  const activeFilterCount = [dept, location, type].filter(v => v !== 'All').length + (search ? 1 : 0)
+  const activeFilterCount = [dept, location, type].filter(v => v !== ALL_FILTER).length + (normalizedSearch ? 1 : 0)
+
+  const clearFilters = () => {
+    setDept(ALL_FILTER)
+    setLocation(ALL_FILTER)
+    setType(ALL_FILTER)
+    setSearch('')
+  }
 
   const filtered = useMemo(() => {
     return jobs.filter(j => {
-      const matchSearch = j.title.toLowerCase().includes(search.toLowerCase())
-      const matchDept = dept === 'All' || j.department === dept
-      const matchLoc = location === 'All' || j.location === location
-      const matchType = type === 'All' || j.type === type
+      const matchSearch = j.title.toLowerCase().includes(normalizedSearch)
+      const matchDept = dept === ALL_FILTER || j.department === dept
+      const matchLoc = location === ALL_FILTER || j.location === location
+      const matchType = type === ALL_FILTER || j.type === type
       return matchSearch && matchDept && matchLoc && matchType
     })
-  }, [search, dept, location, type])
+  }, [normalizedSearch, dept, location, type])
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
@@ -179,7 +188,7 @@ export function CareersPage() {
           </button>
           {activeFilterCount > 0 && (
             <button
-              onClick={() => { setDept('All'); setLocation('All'); setType('All'); setSearch('') }}
+              onClick={clearFilters}
               className="text-xs font-bold text-slate-400 hover:text-rose-500 transition-colors"
             >
               Clear all
@@ -232,9 +241,9 @@ export function CareersPage() {
                 </div>
               </div>
 
-              {(dept !== 'All' || location !== 'All' || type !== 'All' || search) && (
+              {(dept !== ALL_FILTER || location !== ALL_FILTER || type !== ALL_FILTER || normalizedSearch) && (
                 <button
-                  onClick={() => { setDept('All'); setLocation('All'); setType('All'); setSearch('') }}
+                  onClick={clearFilters}
                   className="text-xs font-bold text-slate-400 hover:text-rose-500 transition-colors flex items-center gap-1.5"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

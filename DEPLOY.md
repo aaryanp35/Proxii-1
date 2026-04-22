@@ -12,12 +12,7 @@ npm install -g vercel
 ```
 
 ### 2. Push to GitHub
-Make sure all your changes are committed and pushed to your GitHub repository:
-```bash
-git add .
-git commit -m "Prepare for Vercel deployment"
-git push origin main
-```
+Push your latest branch changes to GitHub.
 
 ### 3. Deploy via Vercel Dashboard (Recommended)
 
@@ -28,10 +23,15 @@ git push origin main
 
 #### B. Configure Environment Variable
 1. In the project settings, go to **Environment Variables**
-2. Add a new variable:
-   - **Name**: `MAPS_API_KEY`
-   - **Value**: `AIzaSyCQ2L7zn1uJB4-qF2ceWJv5i9K2FWmr6vk` (or your key)
-   - **Environments**: Production, Preview, Development
+2. Add variables from your local `.env` file, especially:
+    - **Name**: `MAPS_API_KEY`
+    - **Value**: your real API key (never commit keys in docs)
+    - **Environments**: Production, Preview, Development
+3. Also add Supabase variables used by API/frontend:
+    - `SUPABASE_URL`
+    - `SUPABASE_SERVICE_ROLE_KEY`
+    - `VITE_SUPABASE_URL`
+    - `VITE_SUPABASE_ANON_KEY`
 
 #### C. Deploy
 1. Click **Deploy**
@@ -55,26 +55,26 @@ vercel --prod
 ```
 Proxii-1/
 ├── api/
-│   └── score.js          # Serverless API function
-├── proxii-frontend/
-│   ├── src/
-│   ├── dist/             # Build output (generated)
-│   └── package.json
+│   ├── score.js          # Serverless score API
+│   └── apply.js          # Serverless application API
+├── src/                  # React frontend source
+├── dist/                 # Build output (generated)
 ├── vercel.json           # Deployment config
-└── package.json          # Root dependencies (axios)
+└── package.json          # Root app config and scripts
 ```
 
 ## How It Works
-- **Frontend**: Vite builds static files to `proxii-frontend/dist/`
-- **API**: `/api/score/:zipcode` → serverless function at `/api/score.js`
+- **Frontend**: Vite builds static files to `dist/`
+- **API**:
+  - `/api/score/:zipcode` → `api/score.js`
+  - `/api/apply` → `api/apply.js`
 - **Routing**: `vercel.json` rewrites API calls to the serverless function
-- **Environment**: `MAPS_API_KEY` injected at runtime
+- **Environment**: env vars are injected at runtime by Vercel
 
 ## Testing Locally with Vercel CLI
 ```bash
 # Install dependencies
 npm install
-cd proxii-frontend && npm install && cd ..
 
 # Start Vercel dev server (simulates production)
 vercel dev
@@ -90,7 +90,7 @@ After deployment, your app will be available at:
 ## Troubleshooting
 
 ### Build fails
-- Check that `proxii-frontend/package.json` has `"build": "vite build"`
+- Check that root `package.json` has `"build": "vite build"`
 - Verify Node version is 18+ in `package.json` engines
 
 ### API returns 500
