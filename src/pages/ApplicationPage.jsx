@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useParams, Navigate, useNavigate } from 'react-router-dom'
 import { jobs } from '../data/jobs'
+import { supabase } from '../lib/supabase'
 
 const SV_CHARACTERS = [
   'Gavin Belson',
@@ -96,6 +97,8 @@ export function ApplicationPage() {
 
   const [submitted, setSubmitted] = useState(false)
   const [submitAttempted, setSubmitAttempted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   // Standard fields
   const [firstName, setFirstName] = useState('')
@@ -142,9 +145,10 @@ export function ApplicationPage() {
     nailgun: nailgunError,
   }
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault()
     setSubmitAttempted(true)
+    setSubmitError('')
 
     const allStandardValid =
       firstName.trim() && lastName.trim() &&
@@ -153,9 +157,44 @@ export function ApplicationPage() {
 
     const allProxiiValid = svCharacter === 'Dinesh' && !iafError && iafRating !== '' && nailgun === 'Yes'
 
-    if (allStandardValid && allProxiiValid) {
+    if (!allStandardValid || !allProxiiValid) return
+
+    setSubmitting(true)
+    try {
+      // Upload resume to Supabase Storage
+      const ext = resumeFile.name.split('.').pop()
+      const storagePath = `${job.id}/${Date.now()}-${lastName}-${firstName}.${ext}`
+      const { error: uploadError } = await supabase.storage
+        .from('resumes')
+        .upload(storagePath, resumeFile, { contentType: resumeFile.type, upsert: false })
+
+      if (uploadError) throw new Error(`Resume upload failed: ${uploadError.message}`)
+
+      const res = await fetch('/api/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobId: job.id,
+          jobTitle: job.title,
+          firstName, lastName, email, phone,
+          linkedin, portfolio,
+          resumeName: resumeFile.name,
+          resumePath: storagePath,
+          whyProxii, coverLetter,
+          availability, referral,
+          svCharacter, iafRating, nailgun,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Submission failed')
+      }
       setSubmitted(true)
       window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (err) {
+      setSubmitError(err.message || 'Something went wrong. Please try again.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -435,19 +474,42 @@ export function ApplicationPage() {
           </div>
 
           {/* Submit */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 pb-8">
-            <p className="text-xs text-slate-400 font-medium">
-              Fields marked <span className="text-rose-400 font-bold">*</span> are required.
-            </p>
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-10 py-3.5 bg-slate-900 text-white text-sm font-bold rounded-2xl hover:bg-[#2D8E6F] transition-all duration-300 shadow-lg shadow-slate-900/10 flex items-center justify-center gap-2 group"
-            >
-              Submit application
-              <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </button>
+          <div className="flex flex-col gap-3 pt-2 pb-8">
+            {submitError && (
+              <div className="flex items-center gap-2 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-sm text-rose-600 font-medium">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {submitError}
+              </div>
+            )}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-xs text-slate-400 font-medium">
+                Fields marked <span className="text-rose-400 font-bold">*</span> are required.
+              </p>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full sm:w-auto px-10 py-3.5 bg-slate-900 text-white text-sm font-bold rounded-2xl hover:bg-[#2D8E6F] disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-slate-900/10 flex items-center justify-center gap-2 group"
+              >
+                {submitting ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                    Submitting…
+                  </>
+                ) : (
+                  <>
+                    Submit application
+                    <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </main>

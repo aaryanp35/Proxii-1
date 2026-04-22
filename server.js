@@ -3,6 +3,12 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -364,6 +370,50 @@ app.get("/api/score/:zipcode", async (req, res) => {
 // Simple health endpoint for quick smoke tests
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
+});
+
+app.use(express.json());
+
+app.post("/api/apply", async (req, res) => {
+  const {
+    jobId, jobTitle,
+    firstName, lastName, email, phone,
+    linkedin, portfolio, resumeName, resumePath,
+    whyProxii, coverLetter,
+    availability, referral,
+    svCharacter, iafRating, nailgun,
+  } = req.body;
+
+  if (!firstName || !lastName || !email || !phone || !whyProxii || !availability || !referral || !svCharacter || !iafRating || !nailgun) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const { error } = await supabase.from("applications").insert({
+    job_id: jobId,
+    job_title: jobTitle,
+    first_name: firstName,
+    last_name: lastName,
+    email,
+    phone,
+    linkedin: linkedin || null,
+    portfolio: portfolio || null,
+    resume_name: resumeName || null,
+    resume_path: resumePath || null,
+    why_proxii: whyProxii,
+    cover_letter: coverLetter || null,
+    availability,
+    referral,
+    sv_character: svCharacter,
+    iaf_rating: parseFloat(iafRating),
+    nailgun,
+  });
+
+  if (error) {
+    console.error("Supabase insert error:", error);
+    return res.status(500).json({ error: "Failed to save application" });
+  }
+
+  return res.json({ success: true });
 });
 
 app.listen(port, () => {
