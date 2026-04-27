@@ -7,6 +7,7 @@ import { Footer } from '../components/Footer'
 const DEPARTMENTS = ['All', ...new Set(jobs.map(j => j.department))]
 const LOCATIONS = ['All', ...new Set(jobs.map(j => j.location))]
 const TYPES = ['All', ...new Set(jobs.map(j => j.type))]
+const ALL_FILTER = 'All'
 
 function FilterChip({ label, active, onClick }) {
   return (
@@ -94,20 +95,30 @@ function JobCard({ job }) {
 
 export function CareersPage() {
   const [search, setSearch] = useState('')
-  const [dept, setDept] = useState('All')
-  const [location, setLocation] = useState('All')
-  const [type, setType] = useState('All')
+  const [dept, setDept] = useState(ALL_FILTER)
+  const [location, setLocation] = useState(ALL_FILTER)
+  const [type, setType] = useState(ALL_FILTER)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const normalizedSearch = search.trim().toLowerCase()
+
+  const activeFilterCount = [dept, location, type].filter(v => v !== ALL_FILTER).length + (normalizedSearch ? 1 : 0)
+
+  const clearFilters = () => {
+    setDept(ALL_FILTER)
+    setLocation(ALL_FILTER)
+    setType(ALL_FILTER)
+    setSearch('')
+  }
 
   const filtered = useMemo(() => {
     return jobs.filter(j => {
-      const matchSearch = j.title.toLowerCase().includes(search.toLowerCase())
-      const matchDept = dept === 'All' || j.department === dept
-      const matchLoc = location === 'All' || j.location === location
-      const matchType = type === 'All' || j.type === type
+      const matchSearch = j.title.toLowerCase().includes(normalizedSearch)
+      const matchDept = dept === ALL_FILTER || j.department === dept
+      const matchLoc = location === ALL_FILTER || j.location === location
+      const matchType = type === ALL_FILTER || j.type === type
       return matchSearch && matchDept && matchLoc && matchType
     })
-  }, [search, dept, location, type])
+  }, [normalizedSearch, dept, location, type])
 
   const activeFilterCount = [dept !== 'All', location !== 'All', type !== 'All', !!search].filter(Boolean).length
 
@@ -146,40 +157,40 @@ export function CareersPage() {
       </header>
 
       {/* Content */}
-      <main id="main-content" className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 md:px-12 py-8 md:py-12">
-
+      <div className="flex-1 max-w-6xl mx-auto w-full px-6 md:px-12 py-12">
         {/* Mobile filter toggle */}
-        <div className="flex items-center justify-between mb-5 md:hidden">
-          <p className="text-sm font-semibold text-slate-500">
-            <span className="text-slate-900 font-bold">{filtered.length}</span> position{filtered.length !== 1 ? 's' : ''} found
-          </p>
+        <div className="md:hidden mb-4 flex items-center gap-3">
           <button
-            type="button"
-            aria-expanded={filtersOpen}
-            aria-controls="job-filters"
-            onClick={() => setFiltersOpen(o => !o)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 shadow-sm hover:border-slate-300 transition-colors focus-ring min-h-[44px]"
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 shadow-sm hover:border-[#2D8E6F]/30 transition-all"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
             </svg>
             Filters
             {activeFilterCount > 0 && (
-              <span className="w-5 h-5 bg-[#2D8E6F] text-white text-[10px] font-black rounded-full flex items-center justify-center" aria-label={`${activeFilterCount} active filters`}>
+              <span className="w-5 h-5 bg-[#2D8E6F] text-white text-[10px] font-black rounded-full flex items-center justify-center">
                 {activeFilterCount}
               </span>
             )}
+            <svg className={`w-4 h-4 text-slate-400 transition-transform ${filtersOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
           </button>
+          {activeFilterCount > 0 && (
+            <button
+              onClick={clearFilters}
+              className="text-xs font-bold text-slate-400 hover:text-rose-500 transition-colors"
+            >
+              Clear all
+            </button>
+          )}
         </div>
 
-        <div className="flex flex-col md:flex-row gap-8 md:gap-10">
+        <div className="flex flex-col md:flex-row gap-10">
           {/* Sidebar filters */}
-          <aside
-            id="job-filters"
-            aria-label="Job filters"
-            className={`${filtersOpen ? 'block' : 'hidden'} md:block md:w-56 flex-shrink-0`}
-          >
-            <div className="md:sticky md:top-24 space-y-6 md:space-y-8 bg-white md:bg-transparent rounded-2xl md:rounded-none p-4 md:p-0 border border-slate-100 md:border-0 mb-6 md:mb-0">
+          <aside className={`md:w-56 flex-shrink-0 ${filtersOpen ? 'block' : 'hidden'} md:block`}>
+            <div className="sticky top-24 space-y-8">
               {/* Search */}
               <div className="relative" role="search">
                 <label htmlFor="job-search" className="sr-only">Search job titles</label>
@@ -223,11 +234,10 @@ export function CareersPage() {
                 </div>
               </fieldset>
 
-              {activeFilterCount > 0 && (
+              {(dept !== ALL_FILTER || location !== ALL_FILTER || type !== ALL_FILTER || normalizedSearch) && (
                 <button
-                  type="button"
-                  onClick={() => { setDept('All'); setLocation('All'); setType('All'); setSearch('') }}
-                  className="text-xs font-bold text-slate-400 hover:text-rose-500 transition-colors flex items-center gap-1.5 focus-ring rounded min-h-[44px]"
+                  onClick={clearFilters}
+                  className="text-xs font-bold text-slate-400 hover:text-rose-500 transition-colors flex items-center gap-1.5"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -263,7 +273,16 @@ export function CareersPage() {
                 ))}
               </ul>
             )}
-          </section>
+          </main>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="py-8 px-6 md:px-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p className="text-xs font-bold text-slate-400 tracking-wider uppercase">&copy; 2026 Proxii Analytics</p>
+        <div className="flex gap-8">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Privacy Policy</span>
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Market Terms</span>
         </div>
       </main>
 
