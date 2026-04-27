@@ -18,55 +18,61 @@ function App() {
   const [status, setStatus] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const scoreValue = data?.score;
-  const nationalStats = scoreValue ? getNationalStats(scoreValue) : null;
-  const gaugeLabel = !scoreValue ? null : scoreValue >= 65 ? 'High Growth' : scoreValue >= 35 ? 'Balanced Growth' : 'High Risk';
-  const gaugeClass = !scoreValue ? '' : scoreValue >= 65 ? 'text-emerald-400' : scoreValue >= 35 ? 'text-amber-400' : 'text-rose-400';
-  const gaugeTextClass = !scoreValue ? '' : scoreValue >= 65 ? 'text-emerald-500' : scoreValue >= 35 ? 'text-amber-500' : 'text-rose-500';
+  const scoreValue = data?.score
+  const nationalStats = scoreValue ? getNationalStats(scoreValue) : null
+  const gaugeLabel = !scoreValue ? null : scoreValue >= 65 ? 'High Growth' : scoreValue >= 35 ? 'Balanced Growth' : 'High Risk'
+  const gaugeClass = !scoreValue ? '' : scoreValue >= 65 ? 'text-emerald-400' : scoreValue >= 35 ? 'text-amber-400' : 'text-rose-400'
+  const gaugeTextClass = !scoreValue ? '' : scoreValue >= 65 ? 'text-emerald-500' : scoreValue >= 35 ? 'text-amber-500' : 'text-rose-500'
 
-  const drivers = useMemo(() => data?.drivers ?? [], [data]);
-  const risks = useMemo(() => data?.risks ?? [], [data]);
+  const drivers = useMemo(() => data?.drivers ?? [], [data])
+  const risks = useMemo(() => data?.risks ?? [], [data])
 
   useEffect(() => {
-    if (!scoreValue) return;
-    const gauge = document.getElementById('main-gauge');
-    const circumference = 264;
-    const offset = circumference - (scoreValue / 100) * circumference;
-    setTimeout(() => {
-      gauge?.style.setProperty('stroke-dashoffset', String(offset));
-    }, 200);
-  }, [scoreValue]);
+    if (!scoreValue) return
+    const gauge = document.getElementById('main-gauge')
+    const circumference = 264
+    const offset = circumference - (scoreValue / 100) * circumference
+    const timer = setTimeout(() => {
+      gauge?.style.setProperty('stroke-dashoffset', String(offset))
+    }, 200)
+    return () => clearTimeout(timer)
+  }, [scoreValue])
 
-  const handleSearch = async () => {
-    // Supports: US (5-digit), Canada (A1A 1A1), and European formats
-    const postalCodeRegex = /^([0-9]{5}|[A-Z]\d[A-Z]\s?\d[A-Z]\d|[0-9]{4,6}|[A-Z]{1,2}\d{1,2}[A-Z\d]?\s?\d[A-Z]{2})$/;
-    if (!postalCodeRegex.test(zipCode.trim())) {
-      setStatus('error');
-      setErrorMessage('Please enter a valid postal code (US, Canada, or Europe).');
-      return;
+  const handleSearch = async (zipOverride) => {
+    const zip = (zipOverride !== undefined ? zipOverride : zipCode).trim()
+    const postalCodeRegex = /^([0-9]{5}|[A-Z]\d[A-Z]\s?\d[A-Z]\d|[0-9]{4,6}|[A-Z]{1,2}\d{1,2}[A-Z\d]?\s?\d[A-Z]{2})$/
+    if (!postalCodeRegex.test(zip)) {
+      setStatus('error')
+      setErrorMessage('Please enter a valid postal code (US, Canada, or Europe).')
+      return
     }
-
-    setStatus('loading');
-    setErrorMessage('');
+    setZipCode(zip)
+    setStatus('loading')
+    setErrorMessage('')
     try {
-      const response = await fetch(`/api/score/${zipCode}`);
+      const response = await fetch(`/api/score/${zip}`)
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to fetch score data');
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to fetch score data')
       }
-      const payload = await response.json();
-      setData(payload);
-      setAreaName(payload.areaName || '');
-      setStatus('success');
+      const payload = await response.json()
+      setData(payload)
+      setAreaName(payload.areaName || '')
+      setStatus('success')
     } catch (error) {
-      setStatus('error');
-      setErrorMessage(error.message || 'Unable to fetch score. Please try again.');
+      setStatus('error')
+      setErrorMessage(error.message || 'Unable to fetch score. Please try again.')
     }
-  };
+  }
 
-  const handleToggle = (mode) => {
-    setToggleState(mode);
-  };
+  // Auto-search when navigating from profile page
+  useEffect(() => {
+    const zip = location.state?.autoSearch
+    if (zip) {
+      navigate('/', { replace: true, state: {} })
+      handleSearch(zip)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleZipInputChange = (event) => {
     const value = event.target.value.toUpperCase().trim();
@@ -243,42 +249,36 @@ function App() {
         )}
       </nav>
 
-      {/* Main Content */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-12 py-12">
-        
         {/* Hero Section */}
         <section className="intro-hero mb-10 md:mb-20 flex flex-col items-center text-center reveal-node">
           {status === 'loading' && (
-            <div className="absolute top-32 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-20">
-              <div className="w-12 h-12 border-4 border-[#2D8E6F]/20 border-t-[#2D8E6F] rounded-full animate-spin"></div>
-              <p className="text-sm font-semibold text-slate-600">Loading results for {zipCode}...</p>
+            <div
+              role="status"
+              aria-live="polite"
+              aria-label={`Loading results for ${zipCode}`}
+              className="absolute top-32 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-20"
+            >
+              <div className="w-12 h-12 border-4 border-[#2D8E6F]/20 border-t-[#2D8E6F] rounded-full animate-spin" aria-hidden="true" />
+              <p className="text-sm font-semibold text-slate-600">Loading results for {zipCode}…</p>
             </div>
           )}
-          
-          {/* Gauge Display (only shown when data is loaded) */}
-          {scoreValue ? (
-            <div className="gauge-container relative w-80 h-80 md:w-[420px] md:h-[420px] flex items-center justify-center">
-              <div className="absolute inset-0 bg-[#E8B34F]/10 blur-[120px] rounded-full"></div>
-              
-              {/* Sparkles */}
-              <div className="sparkle absolute" style={{ top: '10%', left: '20%', fontSize: '24px', animationDelay: '0.2s' }}>✨</div>
-              <div className="sparkle absolute" style={{ top: '20%', right: '15%', fontSize: '18px', animationDelay: '0.8s' }}>✨</div>
-              <div className="sparkle absolute" style={{ bottom: '25%', left: '10%', fontSize: '20px', animationDelay: '1.2s' }}>✨</div>
 
-              {/* Gauge */}
-              <svg className="w-full h-full transform -rotate-90 filter drop-shadow-sm">
-                <circle
-                  cx="50%"
-                  cy="50%"
-                  r="42%"
-                  className="stroke-current text-slate-100 fill-none"
-                  strokeWidth="12"
-                />
+          {/* Gauge */}
+          {scoreValue ? (
+            <div className="gauge-container relative w-full max-w-[280px] sm:max-w-xs md:w-[420px] md:max-w-none aspect-square flex items-center justify-center">
+              <div className="absolute inset-0 bg-[#E8B34F]/10 blur-[120px] rounded-full" aria-hidden="true" />
+              <span className="sparkle absolute" style={{ top: '10%', left: '20%', fontSize: '20px', animationDelay: '0.2s' }} aria-hidden="true">✨</span>
+              <span className="sparkle absolute" style={{ top: '20%', right: '15%', fontSize: '16px', animationDelay: '0.8s' }} aria-hidden="true">✨</span>
+              <span className="sparkle absolute" style={{ bottom: '25%', left: '10%', fontSize: '18px', animationDelay: '1.2s' }} aria-hidden="true">✨</span>
+
+              <svg
+                className="w-full h-full transform -rotate-90 filter drop-shadow-sm"
+                aria-hidden="true"
+              >
+                <circle cx="50%" cy="50%" r="42%" className="stroke-current text-slate-100 fill-none" strokeWidth="12" />
                 <circle
                   id="main-gauge"
-                  cx="50%"
-                  cy="50%"
-                  r="42%"
+                  cx="50%" cy="50%" r="42%"
                   className={`gauge-ring stroke-current ${gaugeClass} fill-none ${status === 'loading' ? 'animate-pulse' : ''}`}
                   strokeWidth="12"
                   strokeLinecap="round"
@@ -287,75 +287,91 @@ function App() {
               </svg>
 
               <div className="absolute flex flex-col items-center">
-                <NationalPercentileHover 
-                  percentile={nationalStats.percentile} 
+                <NationalPercentileHover
+                  percentile={nationalStats.percentile}
                   rankLabel={nationalStats.rankLabel}
                   topPercentage={nationalStats.topPercentage}
                 >
-                  <span className="text-7xl md:text-9xl font-bold text-slate-900 tracking-tighter cursor-pointer">{scoreValue}</span>
+                  <button
+                    type="button"
+                    className="text-6xl sm:text-7xl md:text-9xl font-bold text-slate-900 tracking-tighter cursor-pointer focus-ring rounded-lg"
+                    aria-label={`Score ${scoreValue} — ${nationalStats.percentile}th national percentile. Click for details.`}
+                  >
+                    {scoreValue}
+                  </button>
                 </NationalPercentileHover>
-                <span className={`${gaugeTextClass} font-bold tracking-[0.2em] text-xs md:text-sm uppercase mt-1`}>{gaugeLabel}</span>
+                <span className={`${gaugeTextClass} font-bold tracking-[0.2em] text-xs md:text-sm uppercase mt-1`} aria-live="polite">
+                  {gaugeLabel}
+                </span>
               </div>
             </div>
           ) : (
-            <div className="gauge-container relative w-80 h-80 md:w-[420px] md:h-[420px] flex items-center justify-center">
-              <div className="absolute inset-0 bg-[#E8B34F]/10 blur-[120px] rounded-full"></div>
-              
-              {/* Sparkles */}
-              <div className="sparkle absolute" style={{ top: '10%', left: '20%', fontSize: '24px', animationDelay: '0.2s' }}>✨</div>
-              <div className="sparkle absolute" style={{ top: '20%', right: '15%', fontSize: '18px', animationDelay: '0.8s' }}>✨</div>
-              <div className="sparkle absolute" style={{ bottom: '25%', left: '10%', fontSize: '20px', animationDelay: '1.2s' }}>✨</div>
-
+            <div className="gauge-container relative w-full max-w-[280px] sm:max-w-xs md:w-[420px] md:max-w-none aspect-square flex items-center justify-center" aria-hidden="true">
+              <div className="absolute inset-0 bg-[#E8B34F]/10 blur-[120px] rounded-full" />
+              <span className="sparkle absolute" style={{ top: '10%', left: '20%', fontSize: '20px', animationDelay: '0.2s' }}>✨</span>
+              <span className="sparkle absolute" style={{ top: '20%', right: '15%', fontSize: '16px', animationDelay: '0.8s' }}>✨</span>
+              <span className="sparkle absolute" style={{ bottom: '25%', left: '10%', fontSize: '18px', animationDelay: '1.2s' }}>✨</span>
               <div className="absolute flex flex-col items-center">
-                <svg className="w-32 h-32 md:w-40 md:h-40 text-slate-300 mb-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 text-slate-300 mb-4" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="0.8" className="text-slate-200" fill="currentColor" fillOpacity="0.03" />
                   <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <p className="text-base md:text-xl font-bold text-slate-400 px-4">Enter any ZIP/postal code in the US, Canada or Europe to begin</p>
+                <p className="text-base sm:text-xl font-bold text-slate-400 px-4">Enter any ZIP/postal code to begin</p>
               </div>
             </div>
           )}
 
-          <div className="mt-10 max-w-2xl">
+          <div className="mt-6 md:mt-10 max-w-2xl px-2">
             {scoreValue ? (
               <>
-                <h1 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">Market Index Analysis</h1>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-slate-900">Market Index Analysis</h1>
                 {status === 'success' && areaName && (
-                  <p className="text-2xl md:text-3xl font-bold text-[#2D8E6F] mb-4">{areaName}</p>
+                  <p className="text-xl sm:text-2xl md:text-3xl font-bold text-[#2D8E6F] mb-4" aria-live="polite">{areaName}</p>
                 )}
-                <p className="text-slate-500 leading-relaxed text-lg">
-                  Zip <span className="text-slate-900 font-semibold">({data.zipcode})</span> shows a {gaugeLabel.toLowerCase()} profile. Current investment signal is <span className={`${gaugeTextClass} font-bold underline decoration-2 underline-offset-4`}>{gaugeLabel}</span>.
+                <p className="text-slate-500 leading-relaxed text-base sm:text-lg">
+                  Zip <span className="text-slate-900 font-semibold">({data.zipcode})</span> shows a {gaugeLabel?.toLowerCase()} profile.
+                  Current investment signal is <span className={`${gaugeTextClass} font-bold underline decoration-2 underline-offset-4`}>{gaugeLabel}</span>.
                 </p>
               </>
             ) : (
               <>
-                <h1 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">Neighborhood Growth Analysis</h1>
-                <p className="text-slate-500 leading-relaxed text-lg">
-                  Discover growth potential and development opportunities. Search by ZIP code to get a comprehensive market index analysis for any neighborhood in the US.
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-slate-900">Neighborhood Growth Analysis</h1>
+                <p className="text-slate-500 leading-relaxed text-base sm:text-lg">
+                  Discover growth potential and development opportunities. Search by ZIP code to get a comprehensive market index for any neighborhood.
                 </p>
               </>
             )}
             {status === 'error' && errorMessage && (
-              <p className="mt-3 text-sm text-rose-500 font-semibold">{errorMessage}</p>
+              <p id="search-error" role="alert" className="mt-3 text-sm text-rose-500 font-semibold">
+                {errorMessage}
+              </p>
             )}
           </div>
         </section>
 
         {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Growth Drivers Card */}
-          <div className="intro-card soft-card card-gradient-emerald hover-lift rounded-[2.5rem] p-8 flex flex-col border border-white reveal-node relative" style={{ animationDelay: '0.1s' }}>
-            {status === 'loading' && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-[2.5rem] z-20"></div>}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-2xl bg-[#2D8E6F]/10 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-[#2D8E6F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
+          {/* Growth Drivers */}
+          <section
+            aria-label="Growth drivers"
+            className="intro-card soft-card card-gradient-emerald hover-lift rounded-[2rem] md:rounded-[2.5rem] p-5 sm:p-8 flex flex-col border border-white reveal-node relative"
+            style={{ animationDelay: '0.1s' }}
+          >
+            {status === 'loading' && (
+              <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-[2rem] md:rounded-[2.5rem] z-20" aria-hidden="true" />
+            )}
+            <div className="flex items-center justify-between mb-6 md:mb-8">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-[#2D8E6F]/10 flex items-center justify-center" aria-hidden="true">
+                  <svg className="w-5 h-5 md:w-6 md:h-6 text-[#2D8E6F]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="text-xl font-bold text-slate-900 leading-tight">Growth Drivers</h3>
-                  <span className="text-[10px] text-[#2D8E6F] font-black uppercase tracking-widest badge-pulse">+{drivers.length} trend{drivers.length !== 1 ? 's' : ''}</span>
+                  <h2 className="text-lg md:text-xl font-bold text-slate-900 leading-tight">Growth Drivers</h2>
+                  <span className="text-[10px] text-[#2D8E6F] font-black uppercase tracking-widest badge-pulse" aria-live="polite">
+                    +{drivers.length} trend{drivers.length !== 1 ? 's' : ''}
+                  </span>
                 </div>
               </div>
               <span className="px-3 py-1 bg-[#2D8E6F]/10 text-[#2D8E6F] text-[10px] font-black uppercase tracking-widest rounded-full">Ascending</span>
@@ -364,46 +380,55 @@ function App() {
             <div className="space-y-3 relative z-10">
               {status === 'loading' ? (
                 <>
-                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse"></div>
-                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse"></div>
-                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse"></div>
+                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse" aria-hidden="true" />
+                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse" aria-hidden="true" />
+                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse" aria-hidden="true" />
                 </>
               ) : drivers.length === 0 ? (
-                <div className="p-4 rounded-2xl bg-slate-50 text-sm text-slate-400">No drivers yet.</div>
+                <p className="p-4 rounded-2xl bg-slate-50 text-sm text-slate-400">No drivers yet.</p>
               ) : (
-                drivers.map((item, idx) => (
-                  <FactorHover 
-                    key={`${item.label}-${idx}`}
-                    label={item.label}
-                    score={item.score}
-                    isDriver={true}
-                  >
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-[#2D8E6F]/5 cursor-pointer transition-all duration-300 ease-out group/item">
-                      <div className="flex items-center gap-4">
-                        <span className="text-xl opacity-80">●</span>
-                        <span className="text-sm font-semibold text-slate-700 group-hover/item:text-[#2D8E6F] transition-colors">{item.label}</span>
-                      </div>
-                      <span className="text-xs text-slate-400 font-semibold">+{item.score.toFixed(1)}</span>
-                    </div>
-                  </FactorHover>
-                ))
+                <ul role="list" className="space-y-3">
+                  {drivers.map((item, idx) => (
+                    <li key={`${item.label}-${idx}`}>
+                      <FactorHover label={item.label} score={item.score} isDriver={true}>
+                        <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-[#2D8E6F]/5 cursor-pointer transition-all duration-300 ease-out group/item min-h-[52px]">
+                          <div className="flex items-center gap-3 md:gap-4">
+                            <span className="text-lg opacity-80 text-[#2D8E6F]" aria-hidden="true">●</span>
+                            <span className="text-sm font-semibold text-slate-700 group-hover/item:text-[#2D8E6F] transition-colors">{item.label}</span>
+                          </div>
+                          <span className="text-xs text-slate-400 font-semibold ml-2 flex-shrink-0" aria-label={`score ${item.score.toFixed(1)} points`}>
+                            +{item.score.toFixed(1)}
+                          </span>
+                        </div>
+                      </FactorHover>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
-          </div>
+          </section>
 
-          {/* Risk Indicators Card */}
-          <div className="intro-card soft-card card-gradient-rose hover-lift rounded-[2.5rem] p-8 flex flex-col border border-white reveal-node relative" style={{ animationDelay: '0.2s' }}>
-            {status === 'loading' && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-[2.5rem] z-20"></div>}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-2xl bg-[#D4465E]/10 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-[#D4465E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Risk Indicators */}
+          <section
+            aria-label="Risk indicators"
+            className="intro-card soft-card card-gradient-rose hover-lift rounded-[2rem] md:rounded-[2.5rem] p-5 sm:p-8 flex flex-col border border-white reveal-node relative"
+            style={{ animationDelay: '0.2s' }}
+          >
+            {status === 'loading' && (
+              <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-[2rem] md:rounded-[2.5rem] z-20" aria-hidden="true" />
+            )}
+            <div className="flex items-center justify-between mb-6 md:mb-8">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-[#D4465E]/10 flex items-center justify-center" aria-hidden="true">
+                  <svg className="w-5 h-5 md:w-6 md:h-6 text-[#D4465E]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="text-xl font-bold text-slate-900 leading-tight">Risk Indicators</h3>
-                  <span className="text-[10px] text-[#D4465E] font-black uppercase tracking-widest badge-pulse">-{risks.length} signal{risks.length !== 1 ? 's' : ''}</span>
+                  <h2 className="text-lg md:text-xl font-bold text-slate-900 leading-tight">Risk Indicators</h2>
+                  <span className="text-[10px] text-[#D4465E] font-black uppercase tracking-widest badge-pulse" aria-live="polite">
+                    -{risks.length} signal{risks.length !== 1 ? 's' : ''}
+                  </span>
                 </div>
               </div>
               <span className="px-3 py-1 bg-[#D4465E]/10 text-[#D4465E] text-[10px] font-black uppercase tracking-widest rounded-full">Alert</span>
@@ -412,32 +437,33 @@ function App() {
             <div className="space-y-3 relative z-10">
               {status === 'loading' ? (
                 <>
-                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse"></div>
-                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse"></div>
-                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse"></div>
+                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse" aria-hidden="true" />
+                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse" aria-hidden="true" />
+                  <div className="p-4 rounded-2xl bg-slate-50 h-12 animate-pulse" aria-hidden="true" />
                 </>
               ) : risks.length === 0 ? (
-                <div className="p-4 rounded-2xl bg-slate-50 text-sm text-slate-400">No risks yet.</div>
+                <p className="p-4 rounded-2xl bg-slate-50 text-sm text-slate-400">No risks yet.</p>
               ) : (
-                risks.map((item, idx) => (
-                  <FactorHover 
-                    key={`${item.label}-${idx}`}
-                    label={item.label}
-                    score={item.score}
-                    isDriver={false}
-                  >
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-[#D4465E]/5 cursor-pointer transition-all duration-300 ease-out group/item">
-                      <div className="flex items-center gap-4">
-                        <span className="text-xl opacity-80">●</span>
-                        <span className="text-sm font-semibold text-slate-700 group-hover/item:text-[#D4465E] transition-colors">{item.label}</span>
-                      </div>
-                      <span className="text-xs text-slate-400 font-semibold">{item.score.toFixed(1)}</span>
-                    </div>
-                  </FactorHover>
-                ))
+                <ul role="list" className="space-y-3">
+                  {risks.map((item, idx) => (
+                    <li key={`${item.label}-${idx}`}>
+                      <FactorHover label={item.label} score={item.score} isDriver={false}>
+                        <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-[#D4465E]/5 cursor-pointer transition-all duration-300 ease-out group/item min-h-[52px]">
+                          <div className="flex items-center gap-3 md:gap-4">
+                            <span className="text-lg opacity-80 text-[#D4465E]" aria-hidden="true">●</span>
+                            <span className="text-sm font-semibold text-slate-700 group-hover/item:text-[#D4465E] transition-colors">{item.label}</span>
+                          </div>
+                          <span className="text-xs text-slate-400 font-semibold ml-2 flex-shrink-0" aria-label={`score ${item.score.toFixed(1)} points`}>
+                            {item.score.toFixed(1)}
+                          </span>
+                        </div>
+                      </FactorHover>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
-          </div>
+          </section>
         </div>
 
         {/* Bottom Info Banner */}
@@ -447,11 +473,16 @@ function App() {
               <div className="w-3.5 h-3.5 rounded-full bg-[#2D8E6F] animate-ping opacity-20"></div>
               <div className="absolute inset-0 w-3.5 h-3.5 rounded-full bg-[#2D8E6F] border-2 border-white"></div>
             </div>
-            <p className="text-sm font-medium text-slate-500">Real-time data stream <span className="text-slate-900 font-bold">Active</span> — Last sync 4m ago.</p>
+            <p className="text-sm font-medium text-slate-500">
+              Real-time data stream <span className="text-slate-900 font-bold">Active</span> — Last sync 4m ago.
+            </p>
           </div>
-          <button className="group flex items-center gap-3 px-8 py-3.5 bg-slate-900 text-white text-xs font-bold rounded-2xl hover:bg-[#2D8E6F] transition-all duration-300 shadow-xl shadow-slate-900/10 uppercase tracking-widest">
+          <button
+            type="button"
+            className="group flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-3.5 bg-slate-900 text-white text-xs font-bold rounded-2xl hover:bg-[#2D8E6F] transition-all duration-300 shadow-xl shadow-slate-900/10 uppercase tracking-widest w-full sm:w-auto justify-center focus-ring"
+          >
             <span>Export Analytics</span>
-            <svg className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
           </button>
@@ -475,7 +506,7 @@ function App() {
         </div>
       </footer>
     </div>
-  );
+  )
 
   return (
     <Routes>
@@ -484,8 +515,9 @@ function App() {
       <Route path="/careers" element={<CareersPage />} />
       <Route path="/careers/:id" element={<JobDetailPage />} />
       <Route path="/careers/:id/apply" element={<ApplicationPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
     </Routes>
-  );
+  )
 }
 
-export default App;
+export default App
