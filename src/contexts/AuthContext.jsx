@@ -1,7 +1,14 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-const AuthContext = createContext(null)
+const DEFAULT_AUTH = {
+  user: null,
+  loading: false,
+  signInWithGoogle: () => {},
+  signOut: () => {},
+}
+
+const AuthContext = createContext(DEFAULT_AUTH)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
