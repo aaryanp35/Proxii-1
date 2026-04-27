@@ -498,6 +498,22 @@ app.post("/api/apply", async (req, res) => {
   return res.json({ success: true });
 });
 
+// Serve frontend from the same origin as the API so Supabase OAuth lands here
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "dist")));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "dist", "index.html"));
+  });
+} else {
+  const { createServer: createViteServer } = await import("vite");
+  const vite = await createViteServer({
+    server: { middlewareMode: true },
+    appType: "spa",
+    root: __dirname,
+  });
+  app.use(vite.middlewares);
+}
+
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+  console.log(`Server listening on http://localhost:${port}`);
 });
