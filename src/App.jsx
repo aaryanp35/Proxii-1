@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import './App.css'
 import { getNationalStats } from './utils/percentile'
 import { NationalPercentileHover } from './components/NationalPercentileHover'
@@ -10,6 +10,9 @@ import { CareersPage } from './pages/CareersPage'
 import { JobDetailPage } from './pages/JobDetailPage'
 import { ApplicationPage } from './pages/ApplicationPage'
 import { AboutPage } from './pages/AboutPage'
+import { ProfilePage } from './pages/ProfilePage'
+import { useAuth } from './contexts/AuthContext'
+import { supabase } from './lib/supabase'
 
 function App() {
   const [toggleState, setToggleState] = useState('live')
@@ -18,6 +21,10 @@ function App() {
   const [data, setData] = useState(null)
   const [status, setStatus] = useState('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [savedZipCodes, setSavedZipCodes] = useState(new Set())
+  const { user, signInWithGoogle } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const scoreValue = data?.score
   const nationalStats = scoreValue ? getNationalStats(scoreValue) : null
@@ -39,17 +46,19 @@ function App() {
     return () => clearTimeout(timer)
   }, [scoreValue])
 
-  const handleSearch = async () => {
+  const handleSearch = async (zipOverride) => {
+    const zip = (zipOverride !== undefined ? zipOverride : zipCode).trim()
     const postalCodeRegex = /^([0-9]{5}|[A-Z]\d[A-Z]\s?\d[A-Z]\d|[0-9]{4,6}|[A-Z]{1,2}\d{1,2}[A-Z\d]?\s?\d[A-Z]{2})$/
-    if (!postalCodeRegex.test(zipCode.trim())) {
+    if (!postalCodeRegex.test(zip)) {
       setStatus('error')
       setErrorMessage('Please enter a valid postal code (US, Canada, or Europe).')
       return
     }
+    setZipCode(zip)
     setStatus('loading')
     setErrorMessage('')
     try {
-      const response = await fetch(`/api/score/${zipCode}`)
+      const response = await fetch(`/api/score/${zip}`)
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || 'Failed to fetch score data')
@@ -62,6 +71,44 @@ function App() {
       setStatus('error')
       setErrorMessage(error.message || 'Unable to fetch score. Please try again.')
     }
+  }
+
+  // Auto-search when navigating from profile page
+  useEffect(() => {
+    const zip = location.state?.autoSearch
+    if (zip) {
+      navigate('/', { replace: true, state: {} })
+      handleSearch(zip)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load saved zip codes when user changes
+  useEffect(() => {
+    if (!user) { setSavedZipCodes(new Set()); return }
+    supabase
+      .from('saved_zips')
+      .select('zip_code')
+      .eq('user_id', user.id)
+      .then(({ data: rows }) => {
+        setSavedZipCodes(new Set((rows ?? []).map(r => r.zip_code)))
+      })
+  }, [user])
+
+  const saveZip = async (zipCode, areaName, score) => {
+    const { error } = await supabase.from('saved_zips').upsert(
+      { user_id: user.id, zip_code: zipCode, area_name: areaName, score },
+      { onConflict: 'user_id,zip_code' }
+    )
+    if (!error) setSavedZipCodes(prev => new Set([...prev, zipCode]))
+  }
+
+  const removeZip = async (zipCode) => {
+    const { error } = await supabase
+      .from('saved_zips')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('zip_code', zipCode)
+    if (!error) setSavedZipCodes(prev => { const n = new Set(prev); n.delete(zipCode); return n })
   }
 
   // Center slot: Live/Historical toggle + search form
@@ -96,7 +143,7 @@ function App() {
       <form
         role="search"
         className="relative group w-full sm:w-72 md:w-64 lg:flex-1 lg:max-w-xs"
-        onSubmit={e => { e.preventDefault(); handleSearch() }}
+        onSubmit={e => { e.preventDefault(); handleSearch(undefined) }}
       >
         <label htmlFor="zip-search" className="sr-only">Search by ZIP or postal code</label>
         <svg
@@ -381,19 +428,52 @@ function App() {
         </div>
       </main>
 
-      {/* Floating Action Button */}
-      <button
-        type="button"
-        aria-label="Add alert"
-        className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 w-14 h-14 sm:w-16 sm:h-16 bg-[#2D8E6F] text-white rounded-full shadow-2xl shadow-[#2D8E6F]/40 flex items-center justify-center hover:scale-110 hover:rotate-90 transition-all duration-500 z-[60] group focus-ring"
-      >
-        <svg className="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-        <span className="absolute right-full mr-3 sm:mr-4 px-3 sm:px-4 py-2 bg-slate-900 text-white text-[10px] font-bold rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest pointer-events-none">
-          Add Alert
-        </span>
-      </button>
+      {/* Floating Action Button — save ZIP when result is showing */}
+      {data ? (
+        user ? (
+          <button
+            type="button"
+            aria-label={savedZipCodes.has(data.zipcode) ? 'Remove saved ZIP' : 'Save ZIP to profile'}
+            onClick={() =>
+              savedZipCodes.has(data.zipcode)
+                ? removeZip(data.zipcode)
+                : saveZip(data.zipcode, areaName, data.score)
+            }
+            className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 w-14 h-14 sm:w-16 sm:h-16 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all duration-300 z-[60] group focus-ring ${
+              savedZipCodes.has(data.zipcode)
+                ? 'bg-[#2D8E6F] shadow-[#2D8E6F]/40'
+                : 'bg-slate-700 shadow-slate-700/30 hover:bg-[#2D8E6F] hover:shadow-[#2D8E6F]/40'
+            }`}
+          >
+            {savedZipCodes.has(data.zipcode) ? (
+              <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            )}
+            <span className="absolute right-full mr-3 sm:mr-4 px-3 py-2 bg-slate-900 text-white text-[10px] font-bold rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest pointer-events-none">
+              {savedZipCodes.has(data.zipcode) ? 'Saved' : 'Save ZIP'}
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            aria-label="Sign in to save ZIP"
+            onClick={signInWithGoogle}
+            className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 w-14 h-14 sm:w-16 sm:h-16 bg-slate-700 text-white rounded-full shadow-2xl shadow-slate-700/30 flex items-center justify-center hover:scale-110 hover:bg-[#2D8E6F] transition-all duration-300 z-[60] group focus-ring"
+          >
+            <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+            <span className="absolute right-full mr-3 sm:mr-4 px-3 py-2 bg-slate-900 text-white text-[10px] font-bold rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest pointer-events-none">
+              Sign in to save
+            </span>
+          </button>
+        )
+      ) : null}
 
       <Footer />
     </div>
@@ -406,6 +486,7 @@ function App() {
       <Route path="/careers" element={<CareersPage />} />
       <Route path="/careers/:id" element={<JobDetailPage />} />
       <Route path="/careers/:id/apply" element={<ApplicationPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
     </Routes>
   )
 }
