@@ -52,7 +52,7 @@ const weights = {
     { label: "Tech Companies & Startups",                                                               keywords: ["tech company", "startup", "tech office", "software company"],           weight: 2.8, tier: "strong" },
     { label: "Universities & Colleges",      placeTypes: ["university"],                                 keywords: ["university", "college", "educational institution"],                    weight: 2.7, tier: "strong" },
     { label: "Public Libraries",             placeTypes: ["library"],                                    keywords: ["library", "public library"],                                            weight: 2.5, tier: "strong" },
-    { label: "Parks & Recreation",           placeTypes: ["park", "recreation_center"],                  keywords: ["public park", "nature park", "recreation center", "sports complex"],   weight: 2.4, tier: "strong" },
+    { label: "Parks & Recreation",           placeTypes: ["park"],                  keywords: ["public park", "nature park", "recreation center", "sports complex"],   weight: 2.4, tier: "strong" },
     { label: "Bookstores",                   placeTypes: ["book_store"],                                 keywords: ["bookstore", "independent bookstore"],                                   weight: 2.2, tier: "strong" },
     { label: "Music Venues",                 placeTypes: ["event_venue"],                               keywords: ["music venue", "concert hall", "live music"],                            weight: 2.0, tier: "strong" },
     { label: "Theaters & Performing Arts",   placeTypes: ["performing_arts_theater"],                   keywords: ["theater", "theatre", "performing arts", "concert venue"],               weight: 2.1, tier: "strong" },

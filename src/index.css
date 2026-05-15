@@ -124,3 +124,69 @@ h1, h2, h3 {
 .gauge-ring {
   transition: stroke-dashoffset 1.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* ================= A11Y ================= */
+
+/* Skip-to-content link */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100%;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: var(--emerald);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  transition: top 0.15s;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Focus ring utility — applied via className="focus-ring" */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--emerald);
+  outline-offset: 2px;
+}
+
+/* Global focus-visible for elements that use focus:outline-none without a replacement */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--emerald);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Inputs manage focus with Tailwind ring utilities — keep outline suppressed */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
+/* Ensure minimum touch target size on coarse-pointer devices (WCAG 2.5.5) */
+@media (pointer: coarse) {
+  a,
+  button,
+  [role='button'],
+  label[for],
+  input[type='checkbox'],
+  input[type='radio'] {
+    min-height: 44px;
+  }
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
