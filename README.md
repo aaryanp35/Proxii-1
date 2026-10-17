@@ -91,4 +91,4 @@ Honest caveats: the regression is trained on 25 bootstrapped labeled ZIPs and it
 
 - Email: aaryanp35@gmail.com
 - LinkedIn: https://www.linkedin.com/in/aaryan-p-5a4223331/
-- Portfolio: https://aaryanp35.github.io/my-portfolio/
+- Portfolio: https://aaryanp35.vercel.app
